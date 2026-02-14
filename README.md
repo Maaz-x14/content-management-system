@@ -8,19 +8,19 @@ The Morphe Labs CMS is a self-hosted content management system designed to empow
 
 ### Core Features
 
-- ✅ **Blog/Article Management** - Rich text editor, categories, tags, SEO, publishing workflow
-- ✅ **Services/Portfolio Management** - Project showcase, image galleries, case studies
-- ✅ **Careers/Job Listings** - Job posting, application tracking, resume uploads
-- ✅ **Media Library** - File upload, image optimization, centralized asset management
-- ✅ **User Management** - Role-based access control (Super Admin, Editor, Viewer)
-- ✅ **Authentication** - JWT-based auth with refresh tokens
-- ✅ **Email Notifications** - Password reset, job applications
-- ✅ **RESTful API** - Public and admin endpoints
+- **Blog/Article Management** - Rich text editor, categories, tags, SEO, publishing workflow
+- **Services/Portfolio Management** - Project showcase, image galleries, case studies
+- **Careers/Job Listings** - Job posting, application tracking, resume uploads
+- **Media Library** - File upload, image optimization, centralized asset management
+- **User Management** - Role-based access control (Super Admin, Editor, Viewer)
+- **Authentication** - JWT-based auth with refresh tokens
+- **Email Notifications** - Password reset, job applications
+- **RESTful API** - Public and admin endpoints
 
 ## 📁 Project Structure
 
 ```
-morphe-cms/
+CMS/
 ├── backend/                    # Node.js/Express API
 │   ├── src/
 │   │   ├── config/            # Configuration files
@@ -49,7 +49,7 @@ morphe-cms/
 │   ├── Implementation_plan.md # Implementation phases
 │   └── Coding_guidelines.md   # Code standards
 │
-└── README.md                   # This file
+└── README.md                   
 ```
 
 ## 🚀 Quick Start
@@ -64,8 +64,8 @@ morphe-cms/
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
-   cd morphe-cms
+   git clone https://github.com/Maaz-x14/content-management-system.git
+   cd CMS
    ```
 
 2. **Set up the backend**
@@ -146,32 +146,6 @@ After running seeders:
 - **HTTP Client:** Axios
 - **Forms:** React Hook Form
 - **Rich Text Editor:** TipTap
-
-## 📋 Development Status
-
-### ✅ Completed (Phase 1 - Foundation)
-- [x] Backend project structure
-- [x] TypeScript, ESLint, Prettier configuration
-- [x] Environment variables setup
-- [x] Core utilities (logger, error handling, encryption, slugify)
-- [x] Configuration files (database, auth, upload, email)
-- [x] Dependencies installed (697 packages)
-- [x] Comprehensive documentation
-
-### 🚧 In Progress (Phase 2 - Database & Models)
-- [ ] Database models (Sequelize)
-- [ ] Database migrations
-- [ ] Database seeders
-
-### ⏳ Upcoming
-- [ ] Phase 3: Authentication System
-- [ ] Phase 4: Blog Module
-- [ ] Phase 5: Services Module
-- [ ] Phase 6: Careers Module
-- [ ] Phase 7: Media Library
-- [ ] Phase 8: Dashboard & Polish
-- [ ] Phase 9: Testing & Documentation
-- [ ] Phase 10: Deployment
 
 ## 🎯 Next Steps
 
@@ -259,6 +233,6 @@ For questions and issues:
 
 ---
 
-**Built with ❤️ by Morphe Labs**
+**Built with ❤️ by Maaz Ahmad**
 
 Ready to build a production-ready CMS! 🚀
