@@ -24,6 +24,7 @@
 | Validation | express-validator | 7.0+ |
 | File Upload | Multer | 1.4+ |
 | Image Processing | Sharp | 0.33+ |
+
 | Email | Nodemailer | 6.9+ |
 | Logging | Winston | 3.11+ |
 | Testing | Jest | 29.7+ |
