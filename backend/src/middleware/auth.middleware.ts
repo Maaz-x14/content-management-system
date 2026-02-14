@@ -9,6 +9,7 @@ declare global {
     namespace Express {
         interface Request {
             user?: {
+                id: number;
                 userId: number;
                 email: string;
                 role: string;
@@ -16,6 +17,19 @@ declare global {
             };
         }
     }
+}
+
+// Add AuthenticatedRequest type for use in controllers
+export interface AuthenticatedRequest extends Request {
+    user?: {
+        id: number;
+        userId: number;
+        email: string;
+        role: string;
+        roleId: number;
+    };
+    file?: Express.Multer.File; // Multer adds file property
+    files?: Express.Multer.File[] | { [fieldname: string]: Express.Multer.File[] }; // Multer add files property
 }
 
 /**
@@ -32,36 +46,41 @@ export const authenticate = async (
         const authHeader = req.headers.authorization;
 
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            throw ApiError.unauthorized('No authentication token provided');
+            return next(ApiError.unauthorized('No authentication token provided'));
         }
 
         const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
-        // Verify token
-        const decoded = verifyAccessToken(token);
+        try {
+            // Verify token
+            const decoded = verifyAccessToken(token);
 
-        // Check if user still exists and is active
-        const user = await User.findByPk(decoded.userId, {
-            include: [{ model: Role, as: 'role' }],
-        });
+            // Check if user still exists and is active
+            const user = await User.findByPk(decoded.userId, {
+                include: [{ model: Role, as: 'role' }],
+            });
 
-        if (!user) {
-            throw ApiError.unauthorized('User not found');
+            if (!user) {
+                return next(ApiError.unauthorized('User not found'));
+            }
+
+            if (!user.is_active) {
+                return next(ApiError.unauthorized('User account is deactivated'));
+            }
+
+            // Attach user info to request
+            req.user = {
+                id: user.id, // Add id alias for convenience
+                userId: user.id,
+                email: user.email,
+                role: decoded.role,
+                roleId: user.role_id,
+            };
+
+            next();
+        } catch (error) {
+            return next(ApiError.unauthorized('Invalid token'));
         }
-
-        if (!user.is_active) {
-            throw ApiError.unauthorized('User account is deactivated');
-        }
-
-        // Attach user info to request
-        req.user = {
-            userId: user.id,
-            email: user.email,
-            role: decoded.role,
-            roleId: user.role_id,
-        };
-
-        next();
     } catch (error) {
         next(error);
     }
@@ -80,20 +99,25 @@ export const optionalAuthenticate = async (
         const authHeader = req.headers.authorization;
 
         if (authHeader && authHeader.startsWith('Bearer ')) {
-            const token = authHeader.substring(7);
-            const decoded = verifyAccessToken(token);
+            try {
+                const token = authHeader.substring(7);
+                const decoded = verifyAccessToken(token);
 
-            const user = await User.findByPk(decoded.userId, {
-                include: [{ model: Role, as: 'role' }],
-            });
+                const user = await User.findByPk(decoded.userId, {
+                    include: [{ model: Role, as: 'role' }],
+                });
 
-            if (user && user.is_active) {
-                req.user = {
-                    userId: user.id,
-                    email: user.email,
-                    role: decoded.role,
-                    roleId: user.role_id,
-                };
+                if (user && user.is_active) {
+                    req.user = {
+                        id: user.id, // Add id alias for convenience
+                        userId: user.id,
+                        email: user.email,
+                        role: decoded.role,
+                        roleId: user.role_id,
+                    };
+                }
+            } catch (error) {
+                // Ignore invalid token for optional auth
             }
         }
 

@@ -6,6 +6,8 @@ import tagRoutes from './tag.routes';
 import blogRoutes from './blog.routes';
 import serviceRoutes from './service.routes';
 import jobRoutes from './job.routes';
+import mediaRoutes from './media.routes';
+import dashboardRoutes from './dashboard.routes';
 
 const router = Router();
 
@@ -27,5 +29,7 @@ router.use('/tags', tagRoutes);
 router.use('/posts', blogRoutes);
 router.use('/services', serviceRoutes);
 router.use('/jobs', jobRoutes);
+router.use('/media', mediaRoutes);
+router.use('/dashboard', dashboardRoutes);
 
 export default router;
