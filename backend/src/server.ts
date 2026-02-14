@@ -18,6 +18,7 @@ import './models';
 
 // Create Express app
 const app: Application = express();
+app.set('etag', false); // Disable ETag to avoid 304s during development
 
 // ============================================
 // Middleware
