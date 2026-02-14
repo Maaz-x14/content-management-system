@@ -63,6 +63,10 @@ import { swaggerSpec } from './config/swagger';
 // Serve Swagger UI
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+// Serve static files from uploads directory
+import path from 'path';
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 // API routes
 app.use('/api/v1', routes);
 
