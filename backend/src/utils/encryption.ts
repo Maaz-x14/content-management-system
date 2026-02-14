@@ -30,7 +30,7 @@ export async function comparePassword(password: string, hash: string): Promise<b
 export function generateAccessToken(payload: { userId: number; email: string; role: string }): string {
     return jwt.sign(payload, authConfig.jwtSecret, {
         expiresIn: authConfig.jwtExpiresIn,
-    });
+    } as jwt.SignOptions);
 }
 
 /**
@@ -41,7 +41,7 @@ export function generateAccessToken(payload: { userId: number; email: string; ro
 export function generateRefreshToken(payload: { userId: number }): string {
     return jwt.sign(payload, authConfig.refreshTokenSecret, {
         expiresIn: authConfig.refreshTokenExpiresIn,
-    });
+    } as jwt.SignOptions);
 }
 
 /**
