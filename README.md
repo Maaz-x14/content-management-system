@@ -8,14 +8,14 @@ The Morphe Labs CMS is a self-hosted content management system designed to empow
 
 ### Core Features
 
-- **Blog/Article Management** - Rich text editor, categories, tags, SEO, publishing workflow
-- **Services/Portfolio Management** - Project showcase, image galleries, case studies
-- **Careers/Job Listings** - Job posting, application tracking, resume uploads
-- **Media Library** - File upload, image optimization, centralized asset management
-- **User Management** - Role-based access control (Super Admin, Editor, Viewer)
-- **Authentication** - JWT-based auth with refresh tokens
-- **Email Notifications** - Password reset, job applications
-- **RESTful API** - Public and admin endpoints
+- **Blog/Article Management** - Create, edit, publish, and delete blog posts with status tracking (Published/Draft).
+- **Services/Portfolio Management** - Manage service offerings and portfolio items.
+- **Careers/Job Listings** - Post job openings, manage applications, and track candidate status.
+- **Media Library** - Upload and manage images and files centrally.
+- **User Management** - Role-based access control (Super Admin, Editor, Viewer) with secure authentication.
+- **Dashboard** - Real-time statistics and recent activity feed.
+- **Authentication** - Secure JWT-based auth with refresh token rotation.
+- **RESTful API** - Fully documented API for frontend integration.
 
 ## 📁 Project Structure
 
@@ -23,33 +23,31 @@ The Morphe Labs CMS is a self-hosted content management system designed to empow
 CMS/
 ├── backend/                    # Node.js/Express API
 │   ├── src/
-│   │   ├── config/            # Configuration files
+│   │   ├── config/            # Database & App Config
 │   │   ├── controllers/       # Request handlers
-│   │   ├── middleware/        # Custom middleware
-│   │   ├── models/            # Database models
-│   │   ├── routes/            # API routes
-│   │   ├── services/          # Business logic
-│   │   ├── utils/             # Utility functions
-│   │   ├── types/             # TypeScript types
-│   │   ├── migrations/        # Database migrations
-│   │   ├── seeders/           # Seed data
-│   │   └── tests/             # Test files
-│   ├── uploads/               # File storage
-│   ├── logs/                  # Application logs
-│   └── package.json
+│   │   ├── middleware/        # Auth, Validation, Error handling
+│   │   ├── models/            # Sequelize Models
+│   │   ├── routes/            # API Routes
+│   │   ├── services/          # Business Logic
+│   │   ├── utils/             # Helpers (Logger, APIError)
+│   │   └── types/             # Check types
+│   └── ...
 │
-├── frontend/                   # React Admin Panel (to be built)
-│   └── (React + TypeScript + Vite)
+├── frontend/                   # React Admin Panel
+│   ├── src/
+│   │   ├── components/        # Reusable UI components
+│   │   ├── context/           # Auth & Theme Context
+│   │   ├── pages/             # Page Views (Dashboard, Users, Posts, etc.)
+│   │   ├── services/          # API Services
+│   │   └── types/             # TypeScript Definitions
+│   └── ...
 │
-├── docs/                       # Documentation
-│   ├── PRD.md                 # Product requirements
-│   ├── API_spec.md            # API documentation
-│   ├── DB_schema.md           # Database schema
-│   ├── Architecture.md        # System architecture
-│   ├── Implementation_plan.md # Implementation phases
-│   └── Coding_guidelines.md   # Code standards
+├── docs/                       # Project Documentation
+│   ├── PRD.md                 # Product Requirements
+│   ├── API_spec.md            # API Documentation
+│   └── ...
 │
-└── README.md                   
+└── README.md                   # Project Overview
 ```
 
 ## 🚀 Quick Start
@@ -68,31 +66,32 @@ CMS/
    cd CMS
    ```
 
-2. **Set up the backend**
+2. **Set up the Backend**
    ```bash
    cd backend
    npm install
-   ```
-
-3. **Configure environment**
-   ```bash
    cp .env.example .env.development
    # Edit .env.development with your database credentials
-   ```
-
-4. **Set up the database**
-   ```bash
+   
+   # Database Setup
    createdb morphe_cms_dev
    npm run db:migrate
    npm run db:seed
-   ```
-
-5. **Start the development server**
-   ```bash
+   
+   # Start Server
    npm run dev
    ```
+   The API will be available at `http://localhost:5001/api/v1`
 
-   The API will be available at `http://localhost:5000`
+3. **Set up the Frontend**
+   ```bash
+   cd ../frontend
+   npm install
+   
+   # Start Client
+   npm run dev
+   ```
+   The Admin Panel will be available at `http://localhost:5173`
 
 ### Default Credentials
 
@@ -102,24 +101,6 @@ After running seeders:
 
 ⚠️ **Change this password immediately in production!**
 
-## 📚 Documentation
-
-### Essential Reading
-
-1. **[SETUP_COMPLETE.md](SETUP_COMPLETE.md)** - Setup completion status and next steps
-2. **[DEVELOPMENT_ROADMAP.md](DEVELOPMENT_ROADMAP.md)** - Step-by-step development guide
-3. **[IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)** - Current implementation status
-4. **[PROJECT_SUMMARY.md](PROJECT_SUMMARY.md)** - Complete project overview
-
-### Technical Specifications
-
-1. **[PRD.md](PRD.md)** - Product Requirements Document
-2. **[API_spec.md](API_spec.md)** - Complete API endpoint documentation
-3. **[DB_schema.md](DB_schema.md)** - Database schema and table definitions
-4. **[Architecture.md](Architecture.md)** - System architecture and data flow
-5. **[Implementation_plan.md](Implementation_plan.md)** - 16-week implementation plan
-6. **[Coding_guidelines.md](Coding_guidelines.md)** - Code standards and examples
-
 ## 🛠️ Technology Stack
 
 ### Backend
@@ -128,111 +109,66 @@ After running seeders:
 - **Language:** TypeScript 5.0+
 - **Database:** PostgreSQL 15+
 - **ORM:** Sequelize 6.35+
-- **Authentication:** JWT (jsonwebtoken)
-- **Password Hashing:** bcrypt (12 rounds)
-- **Validation:** express-validator
-- **File Upload:** Multer + Sharp
-- **Email:** Nodemailer
-- **Logging:** Winston
-- **Testing:** Jest + Supertest
+- **Auth:** JWT, bcrypt
+- **Validation:** Zod, express-validator
+- **Logging:** Winston + Morgan
+- **Docs:** Swagger/OpenAPI
 
-### Frontend (To Be Built)
+### Frontend
 - **Framework:** React 18.2+
-- **Language:** TypeScript 5.0+
 - **Build Tool:** Vite 5.0+
-- **UI Library:** Ant Design or Material-UI
+- **Language:** TypeScript 5.0+
+- **Styling:** Tailwind CSS (v4)
+- **State Management:** React Query (TanStack Query)
 - **Routing:** React Router 6.20+
-- **State Management:** React Query
-- **HTTP Client:** Axios
-- **Forms:** React Hook Form
-- **Rich Text Editor:** TipTap
-
-## 🎯 Next Steps
-
-1. **Set up PostgreSQL database**
-   ```bash
-   createdb morphe_cms_dev
-   ```
-
-2. **Update environment variables**
-   - Edit `backend/.env.development`
-   - Set your database credentials
-
-3. **Create database models**
-   - Start with `Role.model.ts`
-   - Follow the order in `DEVELOPMENT_ROADMAP.md`
-
-4. **Create migrations and seeders**
-   - Use Sequelize CLI
-   - Refer to `DB_schema.md` for table definitions
-
-5. **Build authentication system**
-   - Middleware, services, controllers, routes
-   - Test with Postman
-
-6. **Build core modules**
-   - Blog, Services, Careers
-   - Follow `DEVELOPMENT_ROADMAP.md`
+- **Forms:** React Hook Form + Zod
+- **Icons:** Lucide React
 
 ## 📝 Scripts
 
-### Backend Development
+### Backend
 ```bash
 npm run dev              # Start development server
 npm run build            # Build for production
-npm start                # Start production server
+npm start                # Start production server (dist)
 npm test                 # Run tests
 npm run lint             # Run ESLint
-npm run format           # Format code with Prettier
 ```
 
-### Database
+### Frontend
 ```bash
-npm run db:migrate       # Run migrations
-npm run db:migrate:undo  # Undo last migration
-npm run db:seed          # Run seeders
-npm run db:reset         # Reset database
+npm run dev              # Start development server
+npm run build            # Build for production
+npm run preview          # Preview production build
+npm run lint             # Run ESLint
 ```
 
 ## 🔐 Security Features
 
-- Password hashing with bcrypt (12 rounds)
-- JWT-based authentication with refresh tokens
-- Rate limiting (5 login attempts per 15 min)
-- CORS configuration
-- Helmet.js security headers
-- Input validation and sanitization
-- SQL injection prevention (parameterized queries)
-- XSS protection
-- File upload validation
+- **Authentication**: JWT access & refresh tokens.
+- **Authorization**: Role-based access control (RBAC).
+- **Data Protection**: Password hashing (bcrypt), Input validation (Zod).
+- **Network**: CORS configuration, Helmet.js headers, Rate limiting.
 
-## 📊 Project Timeline
+## 📊 Project Status
 
-- **Total Duration:** 16 weeks
-- **Team Size:** 2-3 developers
-- **Current Status:** Week 1 - Foundation Complete
-- **Next Phase:** Week 2-3 - Database Models & Authentication
+- **Current Phase:** Minimum Viable Product (MVP) Complete.
+- **Frontend Status:** Core pages implemented (Dashboard, Users, Posts, Services, Jobs, Media).
+- **Backend Status:** Core APIs fully functional and documented.
+- **Next Steps:** See [future.md](future.md) for the roadmap.
 
 ## 🤝 Contributing
 
-1. Follow the coding guidelines in `Coding_guidelines.md`
-2. Write tests for new features
-3. Use meaningful commit messages
-4. Create pull requests for review
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## 📄 License
 
 MIT License - See LICENSE file for details
 
-## 📞 Support
-
-For questions and issues:
-- Refer to the documentation in the `docs/` folder
-- Check `DEVELOPMENT_ROADMAP.md` for step-by-step guidance
-- Review `IMPLEMENTATION_STATUS.md` for current status
-
 ---
 
-**Built with ❤️ by Maaz Ahmad**
-
-Ready to build a production-ready CMS! 🚀
+**Built with ❤️ for Morphe Labs**
