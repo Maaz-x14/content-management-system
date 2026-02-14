@@ -82,6 +82,12 @@ export class BlogPost
     public readonly category?: Category;
     public readonly tags?: Tag[];
 
+    // Mixins
+    public setTags!: (tags: number[] | Tag[]) => Promise<void>;
+    public addTag!: (tag: number | Tag) => Promise<void>;
+    public removeTag!: (tag: number | Tag) => Promise<void>;
+    public getTags!: () => Promise<Tag[]>;
+
     public static associations: {
         author: Association<BlogPost, User>;
         category: Association<BlogPost, Category>;

@@ -55,6 +55,13 @@ app.use('/api', apiRateLimiter);
 // Routes
 // ============================================
 
+// Swagger UI
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './config/swagger';
+
+// Serve Swagger UI
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 // API routes
 app.use('/api/v1', routes);
 

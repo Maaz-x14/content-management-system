@@ -6,7 +6,7 @@ import slugifyLib from 'slugify';
  * @param options - Slugify options
  * @returns URL-friendly slug
  */
-export function slugify(text: string, options?: { lower?: boolean; strict?: boolean }): string {
+export function generateSlug(text: string, options?: { lower?: boolean; strict?: boolean }): string {
     return slugifyLib(text, {
         lower: options?.lower !== false, // default true
         strict: options?.strict !== false, // default true
