@@ -1,4 +1,7 @@
-require('dotenv').config({ path: '.env.development' });
+// Only load from file if NOT in production
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config({ path: '.env.development' });
+}
 
 module.exports = {
   development: {
@@ -15,6 +18,12 @@ module.exports = {
     url: process.env.DATABASE_URL,
     dialect: 'postgres',
     logging: false,
+    dialectOptions: {
+      ssl: {
+        require: true, // MANDATORY for Supabase
+        rejectUnauthorized: false,
+      },
+    },
     pool: {
       max: 10,
       min: 2,

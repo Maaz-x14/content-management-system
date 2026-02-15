@@ -10,43 +10,33 @@ import { errorHandler, notFoundHandler } from './middleware/error.middleware';
 import { apiRateLimiter } from './middleware/rateLimit.middleware';
 import routes from './routes';
 
-// Load environment variables
-// Vercel injects env vars automatically; only load file for local dev
+// 1. Load Env Vars IMMEDIATELY
 if (process.env.NODE_ENV !== 'production') {
     dotenv.config({ path: '.env.development' });
 }
 
-// Import models to ensure associations are loaded
+// 2. Import models AFTER env is loaded to prevent config crashes
 import './models';
 
 const app: Application = express();
+
+// Disable ETag to prevent 304 caching issues during debugging
 app.set('etag', false);
 
 // ============================================
-// Middleware
+// Middleware Sequence (Order is Critical)
 // ============================================
 
-// 1. CORS - MUST come before routes and helmet for preflight success
+// A. CORS MUST BE FIRST
 app.use(
     cors({
         origin: (origin, callback) => {
-            const allowedOrigin = process.env.CORS_ORIGIN;
-            
-            // Allow requests with no origin (like mobile apps or curl)
-            if (!origin) return callback(null, true);
-            
-            // Clean strings to prevent trailing slash mismatches
-            const cleanOrigin = origin.replace(/\/$/, "");
-            const cleanAllowed = allowedOrigin?.replace(/\/$/, "");
-
-            if (
-                cleanOrigin === cleanAllowed || 
-                origin === 'http://localhost:5173' || 
-                process.env.NODE_ENV !== 'production'
-            ) {
+            const allowed = process.env.CORS_ORIGIN;
+            // Allow no-origin requests (like Postman) or explicit matches
+            if (!origin || origin.replace(/\/$/, "") === allowed?.replace(/\/$/, "") || origin === 'http://localhost:5173') {
                 callback(null, true);
             } else {
-                console.error(`CORS Blocked: ${origin} vs Expected: ${allowedOrigin}`);
+                console.error(`CORS Blocked: ${origin} against ${allowed}`);
                 callback(new Error('Not allowed by CORS'));
             }
         },
@@ -56,71 +46,49 @@ app.use(
     })
 );
 
-// 2. Security & Parsing
-app.use(helmet());
+// B. Security Headers
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" } // Required for frontend image access
+}));
+
+// C. Parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
-// 3. Logging
-if (process.env.NODE_ENV === 'development') {
-    app.use(morgan('dev', { stream: morganStream }));
-} else {
-    app.use(morgan('combined', { stream: morganStream }));
-}
-
-// 4. Rate limiting (Applied to API routes)
-app.use('/api', apiRateLimiter);
+// D. Logging
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev', { stream: morganStream }));
 
 // ============================================
 // Routes
 // ============================================
 
-import swaggerUi from 'swagger-ui-express';
-import { swaggerSpec } from './config/swagger';
-import path from 'path';
-
-app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/api/v1', routes);
 
-app.get('/', (_req, res) => {
-    res.json({
-        success: true,
-        message: 'Welcome to Morphe Labs CMS API',
-        version: '1.0.0',
-        env: process.env.NODE_ENV
-    });
+app.get('/', (req, res) => {
+    res.json({ success: true, status: 'Online', message: 'Morphe Labs API' });
 });
 
 // ============================================
 // Error Handling
 // ============================================
-
 app.use(notFoundHandler);
 app.use(errorHandler);
 
 // ============================================
-// Server Initialization
+// Vercel Serverless Initialization
 // ============================================
-
-const PORT = process.env.PORT || 5000;
-
-// FOR VERCEL: We must export the app and NOT block on app.listen in production
 if (process.env.NODE_ENV !== 'production') {
+    const PORT = process.env.PORT || 5000;
     testConnection().then(() => {
-        app.listen(PORT, () => {
-            logger.info(`🚀 Local server running on port ${PORT}`);
-        });
-    }).catch(err => {
-        logger.error('Failed to connect to DB locally:', err);
-        process.exit(1);
+        app.listen(PORT, () => logger.info(`🚀 Local Server: ${PORT}`));
     });
 } else {
-    // In Vercel, we just verify connection. The lambda handles the execution.
+    // In Vercel, we don't block the export with 'await'. 
+    // We let the function spin up and log the connection status.
     testConnection()
-        .then(() => logger.info('Database connected successfully in production'))
-        .catch((err) => logger.error('Production DB Connection Error:', err));
+        .then(() => logger.info('Production DB Connected'))
+        .catch(err => logger.error('Production DB Error:', err));
 }
 
 export default app;
