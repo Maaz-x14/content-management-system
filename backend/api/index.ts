@@ -1,12 +1,18 @@
 // ============================================
 // Vercel Serverless Function Entry Point
 // ============================================
-// Gradually adding back functionality to find the crash
+// CRITICAL: Initialize database and models BEFORE importing routes
 
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
+import dotenv from 'dotenv';
+
+// Load environment variables (Vercel injects them, but this is safe)
+if (process.env.NODE_ENV !== 'production') {
+    dotenv.config({ path: '.env.development' });
+}
 
 const app = express();
 
@@ -14,7 +20,7 @@ const app = express();
 app.set('etag', false);
 
 // ============================================
-// CORS FIRST
+// CORS FIRST (CRITICAL)
 // ============================================
 app.use(
     cors({
@@ -59,8 +65,25 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
 // ============================================
-// ROUTES - Import dynamically to catch errors
+// INITIALIZE DATABASE & MODELS
 // ============================================
+// Import database connection (this initializes Sequelize)
+import { testConnection } from '../src/config/database';
+
+// Import models to register them with Sequelize
+// This MUST happen after database config is loaded
+import '../src/models';
+
+// Test database connection asynchronously (don't block)
+testConnection()
+    .then(() => console.log('✅ Database connected'))
+    .catch((err) => console.error('❌ Database connection failed:', err));
+
+// ============================================
+// ROUTES
+// ============================================
+import routes from '../src/routes';
+import { errorHandler, notFoundHandler } from '../src/middleware/error.middleware';
 
 // Health check
 app.get('/', (req, res) => {
@@ -69,44 +92,17 @@ app.get('/', (req, res) => {
         status: 'Online',
         message: 'Morphe Labs CMS API',
         environment: process.env.NODE_ENV || 'development',
-        timestamp: new Date().toISOString(),
-        database: 'Not connected (testing mode)'
+        timestamp: new Date().toISOString()
     });
 });
 
-// Try to import and use routes, but catch any errors
-try {
-    const routes = require('../src/routes').default;
-    app.use('/api/v1', routes);
-    console.log('✅ Routes loaded successfully');
-} catch (error) {
-    console.error('❌ Failed to load routes:', error);
-    app.use('/api/v1', (req, res) => {
-        res.status(503).json({
-            success: false,
-            message: 'API routes temporarily unavailable',
-            error: process.env.NODE_ENV === 'development' ? String(error) : undefined
-        });
-    });
-}
+// API routes
+app.use('/api/v1', routes);
 
 // ============================================
 // ERROR HANDLING
 // ============================================
-app.use((req, res) => {
-    res.status(404).json({
-        success: false,
-        message: 'Route not found'
-    });
-});
-
-app.use((err: any, req: any, res: any, next: any) => {
-    console.error('Error:', err);
-    res.status(500).json({
-        success: false,
-        message: 'Internal server error',
-        error: process.env.NODE_ENV === 'development' ? err.message : undefined
-    });
-});
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 export default app;
