@@ -11,7 +11,12 @@ import { apiRateLimiter } from './middleware/rateLimit.middleware';
 import routes from './routes';
 
 // Load environment variables
-dotenv.config({ path: '.env.development' });
+// Load environment variables
+if (process.env.NODE_ENV !== 'production') {
+    dotenv.config({ path: '.env.development' });
+} else {
+    dotenv.config(); // Vercel handles the rest
+}
 
 // Import models to ensure associations are loaded
 import './models';
@@ -25,32 +30,32 @@ app.set('etag', false); // Disable ETag to avoid 304s during development
 // ============================================
 
 // Security headers
+// 1. Helmet first for security, but we need to be careful with its defaults
 app.use(helmet());
 
-// CORS
+// 2. CORS - Must be before routes and most other middleware
+const allowedOrigin = process.env.CORS_ORIGIN;
+
 app.use(
     cors({
-        origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+        origin: (origin, callback) => {
+            // Allow requests with no origin (like mobile apps or curl)
+            if (!origin) return callback(null, true);
+            
+            // In production, strictly match the Vercel var
+            // In dev, allow localhost
+            if (origin === allowedOrigin || origin === 'http://localhost:5173') {
+                callback(null, true);
+            } else {
+                console.error(`CORS Blocked: Origin ${origin} does not match ${allowedOrigin}`);
+                callback(new Error('Not allowed by CORS'));
+            }
+        },
         credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
     })
 );
-
-// Body parsing
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Cookie parser
-app.use(cookieParser());
-
-// HTTP request logging
-if (process.env.NODE_ENV === 'development') {
-    app.use(morgan('dev', { stream: morganStream }));
-} else {
-    app.use(morgan('combined', { stream: morganStream }));
-}
-
-// Rate limiting
-app.use('/api', apiRateLimiter);
 
 // ============================================
 // Routes
