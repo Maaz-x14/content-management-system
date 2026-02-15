@@ -31,6 +31,8 @@ export const sequelize = new Sequelize(
         ...config,
         // Ensure we're using the correct dialect
         dialect: 'postgres',
+        // CRITICAL FOR VERCEL: Explicitly pass the dialect module
+        dialectModule: require('pg'),
         // Disable logging in production for cleaner Vercel logs
         logging: env === 'production' ? false : console.log,
     }
