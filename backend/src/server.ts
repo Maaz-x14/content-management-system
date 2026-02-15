@@ -11,43 +11,42 @@ import { apiRateLimiter } from './middleware/rateLimit.middleware';
 import routes from './routes';
 
 // Load environment variables
-// Load environment variables
+// Vercel injects env vars automatically; only load file for local dev
 if (process.env.NODE_ENV !== 'production') {
     dotenv.config({ path: '.env.development' });
-} else {
-    dotenv.config(); // Vercel handles the rest
 }
 
 // Import models to ensure associations are loaded
 import './models';
 
-// Create Express app
 const app: Application = express();
-app.set('etag', false); // Disable ETag to avoid 304s during development
+app.set('etag', false);
 
 // ============================================
 // Middleware
 // ============================================
 
-// Security headers
-// 1. Helmet first for security, but we need to be careful with its defaults
-app.use(helmet());
-
-// 2. CORS - Must be before routes and most other middleware
-const allowedOrigin = process.env.CORS_ORIGIN;
-
+// 1. CORS - MUST come before routes and helmet for preflight success
 app.use(
     cors({
         origin: (origin, callback) => {
+            const allowedOrigin = process.env.CORS_ORIGIN;
+            
             // Allow requests with no origin (like mobile apps or curl)
             if (!origin) return callback(null, true);
             
-            // In production, strictly match the Vercel var
-            // In dev, allow localhost
-            if (origin === allowedOrigin || origin === 'http://localhost:5173') {
+            // Clean strings to prevent trailing slash mismatches
+            const cleanOrigin = origin.replace(/\/$/, "");
+            const cleanAllowed = allowedOrigin?.replace(/\/$/, "");
+
+            if (
+                cleanOrigin === cleanAllowed || 
+                origin === 'http://localhost:5173' || 
+                process.env.NODE_ENV !== 'production'
+            ) {
                 callback(null, true);
             } else {
-                console.error(`CORS Blocked: Origin ${origin} does not match ${allowedOrigin}`);
+                console.error(`CORS Blocked: ${origin} vs Expected: ${allowedOrigin}`);
                 callback(new Error('Not allowed by CORS'));
             }
         },
@@ -57,31 +56,40 @@ app.use(
     })
 );
 
+// 2. Security & Parsing
+app.use(helmet());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(cookieParser());
+
+// 3. Logging
+if (process.env.NODE_ENV === 'development') {
+    app.use(morgan('dev', { stream: morganStream }));
+} else {
+    app.use(morgan('combined', { stream: morganStream }));
+}
+
+// 4. Rate limiting (Applied to API routes)
+app.use('/api', apiRateLimiter);
+
 // ============================================
 // Routes
 // ============================================
 
-// Swagger UI
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger';
-
-// Serve Swagger UI
-app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
-// Serve static files from uploads directory
 import path from 'path';
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// API routes
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/api/v1', routes);
 
-// Root endpoint
 app.get('/', (_req, res) => {
     res.json({
         success: true,
         message: 'Welcome to Morphe Labs CMS API',
         version: '1.0.0',
-        documentation: '/api/v1/health',
+        env: process.env.NODE_ENV
     });
 });
 
@@ -89,10 +97,7 @@ app.get('/', (_req, res) => {
 // Error Handling
 // ============================================
 
-// 404 handler
 app.use(notFoundHandler);
-
-// Global error handler
 app.use(errorHandler);
 
 // ============================================
@@ -101,48 +106,21 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-const startServer = async () => {
-    try {
-        // Test database connection
-        await testConnection();
-
-        // Start server
+// FOR VERCEL: We must export the app and NOT block on app.listen in production
+if (process.env.NODE_ENV !== 'production') {
+    testConnection().then(() => {
         app.listen(PORT, () => {
-            logger.info(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode`);
-            logger.info(`🌐 Server listening on port ${PORT}`);
-            logger.info(`📡 API available at http://localhost:${PORT}/api/v1`);
-            logger.info(`🏥 Health check at http://localhost:${PORT}/api/v1/health`);
+            logger.info(`🚀 Local server running on port ${PORT}`);
         });
-    } catch (error) {
-        logger.error('Failed to start server:', error);
+    }).catch(err => {
+        logger.error('Failed to connect to DB locally:', err);
         process.exit(1);
-    }
-};
-
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err: Error) => {
-    logger.error('Unhandled Promise Rejection:', err);
-    process.exit(1);
-});
-
-// Handle uncaught exceptions
-process.on('uncaughtException', (err: Error) => {
-    logger.error('Uncaught Exception:', err);
-    process.exit(1);
-});
-
-// Graceful shutdown
-process.on('SIGTERM', () => {
-    logger.info('SIGTERM signal received: closing HTTP server');
-    process.exit(0);
-});
-
-process.on('SIGINT', () => {
-    logger.info('SIGINT signal received: closing HTTP server');
-    process.exit(0);
-});
-
-// Start the server
-startServer();
+    });
+} else {
+    // In Vercel, we just verify connection. The lambda handles the execution.
+    testConnection()
+        .then(() => logger.info('Database connected successfully in production'))
+        .catch((err) => logger.error('Production DB Connection Error:', err));
+}
 
 export default app;
