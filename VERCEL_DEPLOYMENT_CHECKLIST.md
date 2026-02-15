@@ -27,6 +27,7 @@
 
 ### 4. **Critical Vercel Landmines Fixed** 💣
 - ✅ **Sequelize Dialect Module**: Added `dialectModule: require('pg')` in `database.ts` because Vercel doesn't always bundle the `pg` package correctly for Sequelize.
+- ✅ **Model Initialization & Associations**: Refactored `models/index.ts` into a master registry and de-coupled model files using `import type`. This definitively fixes `EagerLoadingError: Role is not associated to User!`.
 - ✅ **Read-Only Filesystem**: Fixed `MediaService` to use `/tmp/uploads` instead of `backend/uploads` because the Vercel deployment directory is read-only.
 - ✅ **Logger File Transports**: Disabled Winston file logging in production to avoid write errors.
 
