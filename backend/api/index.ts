@@ -58,7 +58,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
 // ============================================
-// HEALTH CHECK (No database required)
+// HEALTH CHECK
 // ============================================
 app.get('/', (req, res) => {
     res.json({
@@ -77,7 +77,6 @@ app.get('/', (req, res) => {
 // Routes are only loaded when actually accessed
 app.use('/api/v1', async (req, res, next) => {
     try {
-        // Dynamically import routes only when needed
         const routes = await import('../src/routes');
         const router = routes.default;
         router(req, res, next);
@@ -85,13 +84,8 @@ app.use('/api/v1', async (req, res, next) => {
         console.error('CRITICAL: Failed to load routes:', error);
         res.status(503).json({
             success: false,
-            message: 'Service temporarily unavailable - Failed to load routes',
-            error: error.message || String(error),
-            errorDetails: JSON.stringify(error, Object.getOwnPropertyNames(error)),
-            env: {
-                NODE_ENV: process.env.NODE_ENV,
-                DATABASE_URL_SET: !!process.env.DATABASE_URL
-            }
+            message: 'Service temporarily unavailable',
+            error: process.env.NODE_ENV === 'production' ? 'Internal server error' : error.message
         });
     }
 });

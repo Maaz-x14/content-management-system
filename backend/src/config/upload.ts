@@ -1,7 +1,9 @@
 import path from 'path';
 import dotenv from 'dotenv';
 
-dotenv.config({ path: '.env.development' });
+if (process.env.NODE_ENV !== 'production') {
+    dotenv.config({ path: '.env.development' });
+}
 
 export const uploadConfig = {
     uploadDir: process.env.UPLOAD_DIR || './uploads',

@@ -15,14 +15,20 @@
 - ✅ Environment-specific Sequelize configuration
 - ✅ Database sync disabled in production
 
-### 3. **server.ts** ✅
+### 3. **server.ts** & **api/index.ts** ✅
 - ✅ **CRITICAL FIX**: CORS moved to absolute first position
 - ✅ **CRITICAL FIX**: Environment loading before ALL imports
 - ✅ **CRITICAL FIX**: Models imported AFTER environment setup
 - ✅ **CRITICAL FIX**: No `app.listen()` in production mode
+- ✅ **CRITICAL FIX**: Lazy-loading of routes to prevent global crashes
 - ✅ Frontend URL hardcoded in CORS allowed origins
 - ✅ Enhanced health check endpoint with environment info
 - ✅ Proper serverless export pattern
+
+### 4. **Critical Vercel Landmines Fixed** 💣
+- ✅ **Sequelize Dialect Module**: Added `dialectModule: require('pg')` in `database.ts` because Vercel doesn't always bundle the `pg` package correctly for Sequelize.
+- ✅ **Read-Only Filesystem**: Fixed `MediaService` to use `/tmp/uploads` instead of `backend/uploads` because the Vercel deployment directory is read-only.
+- ✅ **Logger File Transports**: Disabled Winston file logging in production to avoid write errors.
 
 ---
 
