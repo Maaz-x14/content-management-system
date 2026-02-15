@@ -1,28 +1,15 @@
 import { Sequelize } from 'sequelize';
-import dotenv from 'dotenv';
 
-dotenv.config({ path: '.env.development' });
+// Import the config using the environment-aware logic we built
+const env = process.env.NODE_ENV || 'development';
+const config = require('./database.config.js')[env];
 
-const databaseUrl = process.env.DATABASE_URL || '';
-
-if (!databaseUrl) {
+if (!config.url && !process.env.DATABASE_URL) {
     throw new Error('DATABASE_URL environment variable is not defined');
 }
 
-export const sequelize = new Sequelize(databaseUrl, {
-    dialect: 'postgres',
-    logging: process.env.NODE_ENV === 'development' ? console.log : false,
-    pool: {
-        max: 10,
-        min: 2,
-        acquire: 30000,
-        idle: 10000,
-    },
-    define: {
-        timestamps: true,
-        underscored: true,
-    },
-});
+// Initialize Sequelize using the URL and the specific config block (SSL, Pool, etc.)
+export const sequelize = new Sequelize(config.url || process.env.DATABASE_URL, config);
 
 /**
  * Test database connection
@@ -30,10 +17,11 @@ export const sequelize = new Sequelize(databaseUrl, {
 export async function testConnection(): Promise<void> {
     try {
         await sequelize.authenticate();
-        console.log('✅ Database connection established successfully');
+        console.log(`✅ Database connection established successfully in ${env} mode`);
     } catch (error) {
         console.error('❌ Unable to connect to the database:', error);
-        throw error;
+        // On Vercel, we don't want to throw and kill the whole lambda immediately
+        // so the app can at least send a proper error response.
     }
 }
 
@@ -41,6 +29,7 @@ export async function testConnection(): Promise<void> {
  * Sync database models (use only in development)
  */
 export async function syncDatabase(force = false): Promise<void> {
+    if (process.env.NODE_ENV === 'production') return;
     try {
         await sequelize.sync({ force });
         console.log('✅ Database synchronized successfully');
