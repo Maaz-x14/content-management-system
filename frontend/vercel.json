@@ -1,0 +1,23 @@
+{
+    "rewrites": [
+        {
+            "source": "/api/v1/:path*",
+            "destination": "https://content-management-system-kappa-six.vercel.app/api/v1/:path*"
+        },
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
+        }
+    ],
+    "headers": [
+        {
+            "source": "/(.*)",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0"
+                }
+            ]
+        }
+    ]
+}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { userService } from '../services/user.service';
 import type { CreateUserDto, UpdateUserDto } from '../services/user.service';
@@ -262,11 +262,20 @@ interface UserFormModalProps {
 }
 
 const UserFormModal: React.FC<UserFormModalProps> = ({ isOpen, onClose, onSubmit, title, roles, defaultValues, isEdit }) => {
-    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+    const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm({
         defaultValues: defaultValues || { roleId: roles[0]?.id },
-        // Use zod resolver here if needed, but simple validation inline or partial schema works too
-        // For simplicity reusing strict schema might require handling empty password in edit
     });
+
+    useEffect(() => {
+        if (isOpen) {
+            reset(defaultValues || { 
+                fullName: '', 
+                email: '', 
+                roleId: roles[0]?.id,
+                password: '' 
+            });
+        }
+    }, [isOpen, defaultValues, reset, roles]);
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title={title}>
