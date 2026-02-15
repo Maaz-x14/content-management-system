@@ -81,12 +81,13 @@ app.use('/api/v1', async (req, res, next) => {
         const routes = await import('../src/routes');
         const router = routes.default;
         router(req, res, next);
-    } catch (error) {
+    } catch (error: any) {
         console.error('Failed to load routes:', error);
         res.status(503).json({
             success: false,
             message: 'Service temporarily unavailable',
-            error: process.env.NODE_ENV === 'development' ? String(error) : 'Internal server error'
+            error: error.message || String(error),
+            stack: error.stack
         });
     }
 });
