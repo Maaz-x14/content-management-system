@@ -21,13 +21,13 @@ export const errorHandler = (
     });
 
     // Handle ApiError (our custom errors)
-    if (err instanceof ApiError) {
-        return res.status(err.statusCode).json({
+    if (err instanceof ApiError || (err as any).isApiError) {
+        return res.status((err as any).statusCode || 500).json({
             success: false,
             error: {
-                code: err.code,
+                code: (err as any).code || 'API_ERROR',
                 message: err.message,
-                details: err.details,
+                details: (err as any).details,
             },
         });
     }

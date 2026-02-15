@@ -58,6 +58,38 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
 // ============================================
+// DEBUG ENDPOINT (TEMPORARY)
+// ============================================
+app.get('/api/v1/debug/db-check', async (req, res) => {
+    try {
+        const { User, Role } = await import('../src/models');
+        const userCount = await User.count();
+        const roleCount = await Role.count();
+        const adminUser = await User.findOne({
+            where: { email: 'admin@morphelabs.com' },
+            attributes: ['id', 'email', 'full_name', 'is_active', 'role_id']
+        });
+
+        res.json({
+            success: true,
+            stats: { userCount, roleCount },
+            admin: adminUser ? {
+                id: adminUser.id,
+                email: adminUser.email,
+                isActive: adminUser.is_active,
+                hasRole: !!adminUser.role_id
+            } : null,
+            env: {
+                nodeEnv: process.env.NODE_ENV,
+                hasDbUrl: !!process.env.DATABASE_URL
+            }
+        });
+    } catch (error: any) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================
 // HEALTH CHECK
 // ============================================
 app.get('/', (req, res) => {
