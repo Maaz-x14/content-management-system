@@ -1,6 +1,6 @@
 import { Model, DataTypes, Optional, Association } from 'sequelize';
 import { sequelize } from '../config/database';
-import { User } from './User.model';
+import type { User } from './User.model';
 
 // File type enum
 export enum FileType {

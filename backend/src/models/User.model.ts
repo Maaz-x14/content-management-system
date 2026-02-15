@@ -1,6 +1,6 @@
 import { Model, DataTypes, Optional, Association } from 'sequelize';
 import { sequelize } from '../config/database';
-import { Role } from './Role.model';
+import type { Role } from './Role.model';
 
 // User attributes interface
 export interface UserAttributes {

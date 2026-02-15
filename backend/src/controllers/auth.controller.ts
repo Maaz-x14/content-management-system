@@ -83,7 +83,7 @@ export const forgotPassword = async (
 
         // Send password reset email
         // Note: We get the user again to send the email, but don't reveal if user exists
-        const { User } = await import('../models/User.model');
+        const { User } = await import('../models');
         const user = await User.findOne({ where: { email } });
 
         if (user) {

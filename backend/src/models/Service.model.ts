@@ -1,7 +1,7 @@
 import { Model, DataTypes, Optional, Association } from 'sequelize';
 import { sequelize } from '../config/database';
-import { User } from './User.model';
-import { ServiceImage } from './ServiceImage.model';
+import type { User } from './User.model';
+import type { ServiceImage } from './ServiceImage.model';
 
 // Service status enum
 export enum ServiceStatus {

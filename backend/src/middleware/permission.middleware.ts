@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { ApiError } from '../utils/ApiError';
-import { Role } from '../models/Role.model';
+import { Role } from '../models';
 
 /**
  * Middleware to check if user has required role(s)

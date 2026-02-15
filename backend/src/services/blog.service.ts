@@ -1,7 +1,4 @@
-import { BlogPost, PostStatus } from '../models/BlogPost.model';
-import { Category } from '../models/Category.model';
-import { Tag } from '../models/Tag.model';
-import { User } from '../models/User.model';
+import { BlogPost, PostStatus, Category, Tag, User } from '../models';
 import { ApiError } from '../utils/ApiError';
 import { generateSlug } from '../utils/slugify';
 import { Op } from 'sequelize';

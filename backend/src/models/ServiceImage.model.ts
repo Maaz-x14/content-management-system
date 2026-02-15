@@ -1,6 +1,6 @@
 import { Model, DataTypes, Optional, Association } from 'sequelize';
 import { sequelize } from '../config/database';
-import { Service } from './Service.model';
+import type { Service } from './Service.model';
 
 // ServiceImage attributes interface
 export interface ServiceImageAttributes {

@@ -1,5 +1,4 @@
-import { Service, ServiceStatus } from '../models/Service.model';
-import { ServiceImage } from '../models/ServiceImage.model';
+import { Service, ServiceStatus, ServiceImage } from '../models';
 import { ApiError } from '../utils/ApiError';
 import { generateSlug } from '../utils/slugify';
 import { Op } from 'sequelize';

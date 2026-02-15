@@ -1,8 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyAccessToken } from '../utils/encryption';
 import { ApiError } from '../utils/ApiError';
-import { User } from '../models/User.model';
-import { Role } from '../models/Role.model';
+import { User, Role } from '../models';
 
 // Extend Express Request to include user
 declare global {

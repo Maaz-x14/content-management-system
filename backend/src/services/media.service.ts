@@ -4,7 +4,7 @@ import path from 'path';
 import sharp from 'sharp';
 import slugify from 'slugify';
 import { v4 as uuidv4 } from 'uuid';
-import { MediaFile, FileType } from '../models/MediaFile.model';
+import { MediaFile, FileType } from '../models';
 import { ApiError } from '../utils/ApiError';
 import { logger } from '../utils/logger';
 

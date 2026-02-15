@@ -1,9 +1,4 @@
-import { User } from '../models/User.model';
-import { BlogPost, PostStatus } from '../models/BlogPost.model';
-import { JobListing, JobStatus } from '../models/JobListing.model';
-import { Service, ServiceStatus } from '../models/Service.model';
-import { JobApplication } from '../models/JobApplication.model';
-import { MediaFile } from '../models/MediaFile.model';
+import { User, BlogPost, PostStatus, JobListing, JobStatus, Service, ServiceStatus, JobApplication, MediaFile } from '../models';
 import { ApiError } from '../utils/ApiError';
 import { logger } from '../utils/logger';
 

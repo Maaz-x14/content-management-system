@@ -1,6 +1,6 @@
 import { Model, DataTypes, Optional, Association } from 'sequelize';
 import { sequelize } from '../config/database';
-import { JobListing } from './JobListing.model';
+import type { JobListing } from './JobListing.model';
 
 // Application status enum
 export enum ApplicationStatus {

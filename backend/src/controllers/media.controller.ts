@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { mediaService } from '../services/media.service';
 import { ApiError } from '../utils/ApiError';
-import { FileType } from '../models/MediaFile.model';
+import { FileType } from '../models';
 
 
 export const uploadFile = async (req: Request, res: Response, next: NextFunction) => {

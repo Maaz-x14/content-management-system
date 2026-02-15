@@ -1,8 +1,8 @@
 import { Model, DataTypes, Optional, Association } from 'sequelize';
 import { sequelize } from '../config/database';
-import { User } from './User.model';
-import { Category } from './Category.model';
-import { Tag } from './Tag.model';
+import type { User } from './User.model';
+import type { Category } from './Category.model';
+import type { Tag } from './Tag.model';
 
 // Blog post status enum
 export enum PostStatus {

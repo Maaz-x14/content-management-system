@@ -1,5 +1,4 @@
-import { JobListing, JobStatus, EmploymentType, LocationType } from '../models/JobListing.model';
-import { JobApplication, ApplicationStatus } from '../models/JobApplication.model';
+import { JobListing, JobStatus, EmploymentType, LocationType, JobApplication, ApplicationStatus } from '../models';
 import { ApiError } from '../utils/ApiError';
 import { generateSlug } from '../utils/slugify';
 import { Op } from 'sequelize';

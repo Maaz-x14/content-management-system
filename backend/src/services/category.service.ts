@@ -1,4 +1,4 @@
-import { Category } from '../models/Category.model';
+import { Category } from '../models';
 import { ApiError } from '../utils/ApiError';
 import { generateSlug } from '../utils/slugify';
 import { Op } from 'sequelize';

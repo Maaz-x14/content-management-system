@@ -1,4 +1,4 @@
-import { Tag } from '../models/Tag.model';
+import { Tag } from '../models';
 import { ApiError } from '../utils/ApiError';
 import { generateSlug } from '../utils/slugify';
 import { Op } from 'sequelize';
