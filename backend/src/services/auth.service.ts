@@ -1,5 +1,4 @@
-import { User } from '../models/User.model';
-import { Role } from '../models/Role.model';
+import { User, Role } from '../models'; 
 import { ApiError } from '../utils/ApiError';
 import {
     comparePassword,
