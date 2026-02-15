@@ -1,18 +1,11 @@
 // ============================================
 // Vercel Serverless Function Entry Point
 // ============================================
-// CRITICAL: Initialize database and models BEFORE importing routes
 
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
-import dotenv from 'dotenv';
-
-// Load environment variables (Vercel injects them, but this is safe)
-if (process.env.NODE_ENV !== 'production') {
-    dotenv.config({ path: '.env.development' });
-}
 
 const app = express();
 
@@ -65,44 +58,56 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
 // ============================================
-// INITIALIZE DATABASE & MODELS
+// HEALTH CHECK (No database required)
 // ============================================
-// Import database connection (this initializes Sequelize)
-import { testConnection } from '../src/config/database';
-
-// Import models to register them with Sequelize
-// This MUST happen after database config is loaded
-import '../src/models';
-
-// Test database connection asynchronously (don't block)
-testConnection()
-    .then(() => console.log('✅ Database connected'))
-    .catch((err) => console.error('❌ Database connection failed:', err));
-
-// ============================================
-// ROUTES
-// ============================================
-import routes from '../src/routes';
-import { errorHandler, notFoundHandler } from '../src/middleware/error.middleware';
-
-// Health check
 app.get('/', (req, res) => {
     res.json({
         success: true,
         status: 'Online',
         message: 'Morphe Labs CMS API',
-        environment: process.env.NODE_ENV || 'development',
+        environment: process.env.NODE_ENV || 'production',
         timestamp: new Date().toISOString()
     });
 });
 
-// API routes
-app.use('/api/v1', routes);
+// ============================================
+// LAZY-LOAD ROUTES
+// ============================================
+// This prevents the serverless function from crashing if models fail to load
+// Routes are only loaded when actually accessed
+app.use('/api/v1', async (req, res, next) => {
+    try {
+        // Dynamically import routes only when needed
+        const routes = await import('../src/routes');
+        const router = routes.default;
+        router(req, res, next);
+    } catch (error) {
+        console.error('Failed to load routes:', error);
+        res.status(503).json({
+            success: false,
+            message: 'Service temporarily unavailable',
+            error: process.env.NODE_ENV === 'development' ? String(error) : 'Internal server error'
+        });
+    }
+});
 
 // ============================================
 // ERROR HANDLING
 // ============================================
-app.use(notFoundHandler);
-app.use(errorHandler);
+app.use((req, res) => {
+    res.status(404).json({
+        success: false,
+        message: 'Route not found'
+    });
+});
+
+app.use((err: any, req: any, res: any, next: any) => {
+    console.error('Error:', err);
+    res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+});
 
 export default app;
