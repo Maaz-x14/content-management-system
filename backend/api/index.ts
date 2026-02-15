@@ -89,6 +89,95 @@ app.get('/api/v1/debug/db-check', async (req, res) => {
     }
 });
 
+app.get('/api/v1/debug/seed', async (req, res) => {
+    try {
+        const { Role, User } = await import('../src/models');
+        const { hashPassword } = await import('../src/utils/encryption');
+
+        // 1. Seed Roles
+        const rolesData = [
+            {
+                name: 'Super Admin',
+                slug: 'super-admin',
+                description: 'Full system access with all permissions',
+                permissions: {
+                    users: { create: true, read: true, update: true, delete: true },
+                    blog: { create: true, read: true, update: true, delete: true, publish: true },
+                    services: { create: true, read: true, update: true, delete: true, publish: true },
+                    careers: { create: true, read: true, update: true, delete: true, publish: true },
+                    media: { upload: true, read: true, update: true, delete: true },
+                    settings: { read: true, update: true },
+                }
+            },
+            {
+                name: 'Editor',
+                slug: 'editor',
+                description: 'Can create and manage content',
+                permissions: {
+                    users: { create: false, read: true, update: false, delete: false },
+                    blog: { create: true, read: true, update: true, delete: false, publish: true },
+                    services: { create: true, read: true, update: true, delete: false, publish: true },
+                    careers: { create: true, read: true, update: true, delete: false, publish: true },
+                    media: { upload: true, read: true, update: true, delete: false },
+                    settings: { read: true, update: false },
+                }
+            },
+            {
+                name: 'Viewer',
+                slug: 'viewer',
+                description: 'Read-only access to content',
+                permissions: {
+                    users: { create: false, read: false, update: false, delete: false },
+                    blog: { create: false, read: true, update: false, delete: false, publish: false },
+                    services: { create: false, read: true, update: false, delete: false, publish: false },
+                    careers: { create: false, read: true, update: false, delete: false, publish: false },
+                    media: { upload: false, read: true, update: false, delete: false },
+                    settings: { read: true, update: false },
+                }
+            }
+        ];
+
+        for (const roleData of rolesData) {
+            await Role.findOrCreate({
+                where: { slug: roleData.slug },
+                defaults: roleData
+            });
+        }
+
+        // 2. Seed Admin User
+        const adminEmail = 'admin@morphelabs.com';
+        const superAdminRole = await Role.findOne({ where: { slug: 'super-admin' } });
+
+        if (!superAdminRole) {
+            throw new Error('Super Admin role not found after seeding roles');
+        }
+
+        const hashedPassword = await hashPassword('Admin@123456');
+
+        const [adminUser, created] = await User.findOrCreate({
+            where: { email: adminEmail },
+            defaults: {
+                email: adminEmail,
+                password_hash: hashedPassword,
+                full_name: 'System Administrator',
+                role_id: superAdminRole.id,
+                is_active: true
+            }
+        });
+
+        res.json({
+            success: true,
+            message: 'Database seeded successfully',
+            created: {
+                admin: created,
+                roles: rolesData.length
+            }
+        });
+    } catch (error: any) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // ============================================
 // HEALTH CHECK
 // ============================================
