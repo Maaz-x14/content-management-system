@@ -12,6 +12,33 @@ const devFormat = printf(({ level, message, timestamp, ...metadata }) => {
     return msg;
 });
 
+// ============================================
+// Serverless-Compatible Logger Configuration
+// ============================================
+// In production (Vercel), only use Console transport
+// File system is read-only in serverless environments
+
+const transports: winston.transport[] = [
+    new winston.transports.Console({
+        format: process.env.NODE_ENV === 'production'
+            ? combine(timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), json())
+            : combine(colorize(), devFormat),
+    }),
+];
+
+// Only add file transports in non-production environments
+if (process.env.NODE_ENV !== 'production') {
+    transports.push(
+        new winston.transports.File({
+            filename: path.join('logs', 'error.log'),
+            level: 'error',
+        }),
+        new winston.transports.File({
+            filename: path.join('logs', 'combined.log'),
+        })
+    );
+}
+
 // Create logger instance
 export const logger = winston.createLogger({
     level: process.env.LOG_LEVEL || 'info',
@@ -19,18 +46,7 @@ export const logger = winston.createLogger({
         timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
         process.env.NODE_ENV === 'production' ? json() : devFormat
     ),
-    transports: [
-        new winston.transports.Console({
-            format: combine(colorize(), devFormat),
-        }),
-        new winston.transports.File({
-            filename: path.join('logs', 'error.log'),
-            level: 'error',
-        }),
-        new winston.transports.File({
-            filename: path.join('logs', 'combined.log'),
-        }),
-    ],
+    transports,
 });
 
 // Stream for Morgan HTTP logger
