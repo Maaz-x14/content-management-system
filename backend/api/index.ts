@@ -1,10 +1,32 @@
 // ============================================
-// Vercel Serverless Function Entry Point
+// MINIMAL VERCEL TEST - Step-by-step debugging
 // ============================================
-// This file re-exports the Express app for Vercel's serverless platform
-// Vercel looks for files in the /api directory by default
 
-import app from '../src/server';
+import express from 'express';
+import cors from 'cors';
 
-// Export the Express app as a Vercel serverless function
+const app = express();
+
+// CORS first
+app.use(cors({
+    origin: '*', // Allow all for testing
+    credentials: true,
+}));
+
+app.use(express.json());
+
+// Simple health check
+app.get('/', (req, res) => {
+    res.json({
+        success: true,
+        message: 'Minimal Vercel test - Working!',
+        timestamp: new Date().toISOString(),
+        env: process.env.NODE_ENV
+    });
+});
+
+app.get('/api/test', (req, res) => {
+    res.json({ test: 'API route working' });
+});
+
 export default app;
