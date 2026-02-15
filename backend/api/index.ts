@@ -82,12 +82,16 @@ app.use('/api/v1', async (req, res, next) => {
         const router = routes.default;
         router(req, res, next);
     } catch (error: any) {
-        console.error('Failed to load routes:', error);
+        console.error('CRITICAL: Failed to load routes:', error);
         res.status(503).json({
             success: false,
-            message: 'Service temporarily unavailable',
+            message: 'Service temporarily unavailable - Failed to load routes',
             error: error.message || String(error),
-            stack: error.stack
+            errorDetails: JSON.stringify(error, Object.getOwnPropertyNames(error)),
+            env: {
+                NODE_ENV: process.env.NODE_ENV,
+                DATABASE_URL_SET: !!process.env.DATABASE_URL
+            }
         });
     }
 });
