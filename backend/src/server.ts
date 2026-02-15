@@ -1,42 +1,64 @@
+// ============================================
+// VERCEL SERVERLESS CONFIGURATION
+// ============================================
+// CRITICAL: Environment variables MUST be loaded BEFORE any imports
+// that depend on them (database config, models, etc.)
+
 import express, { Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
-import { testConnection } from './config/database';
-import { logger, morganStream } from './utils/logger';
-import { errorHandler, notFoundHandler } from './middleware/error.middleware';
-import { apiRateLimiter } from './middleware/rateLimit.middleware';
-import routes from './routes';
 
-// 1. Load Env Vars IMMEDIATELY
+// ============================================
+// 1. ENVIRONMENT SETUP (MUST BE FIRST)
+// ============================================
+// Only load .env.development locally
+// On Vercel, environment variables are injected automatically
 if (process.env.NODE_ENV !== 'production') {
     dotenv.config({ path: '.env.development' });
+    console.log('📁 Loaded .env.development for local development');
 }
 
-// 2. Import models AFTER env is loaded to prevent config crashes
-import './models';
-
+// ============================================
+// 2. INITIALIZE EXPRESS APP
+// ============================================
 const app: Application = express();
 
-// Disable ETag to prevent 304 caching issues during debugging
+// Disable ETag to prevent 304 caching issues
 app.set('etag', false);
 
 // ============================================
-// Middleware Sequence (Order is Critical)
+// 3. CORS MIDDLEWARE (MUST BE ABSOLUTE FIRST)
 // ============================================
-
-// A. CORS MUST BE FIRST
+// CRITICAL: CORS must run before ANY other middleware to handle
+// preflight OPTIONS requests and prevent CORS errors
 app.use(
     cors({
         origin: (origin, callback) => {
-            const allowed = process.env.CORS_ORIGIN;
-            // Allow no-origin requests (like Postman) or explicit matches
-            if (!origin || origin.replace(/\/$/, "") === allowed?.replace(/\/$/, "") || origin === 'http://localhost:5173') {
+            const allowedOrigins = [
+                process.env.CORS_ORIGIN,
+                'https://content-management-system-udo3.vercel.app',
+                'http://localhost:5173',
+            ].filter(Boolean); // Remove undefined values
+
+            // Allow requests with no origin (mobile apps, Postman, curl)
+            if (!origin) {
+                return callback(null, true);
+            }
+
+            // Normalize URLs by removing trailing slashes
+            const normalizedOrigin = origin.replace(/\/$/, '');
+            const isAllowed = allowedOrigins.some(
+                allowed => normalizedOrigin === allowed?.replace(/\/$/, '')
+            );
+
+            if (isAllowed) {
                 callback(null, true);
             } else {
-                console.error(`CORS Blocked: ${origin} against ${allowed}`);
+                console.error(`🚫 CORS Blocked: ${origin}`);
+                console.error(`   Allowed origins: ${allowedOrigins.join(', ')}`);
                 callback(new Error('Not allowed by CORS'));
             }
         },
@@ -46,49 +68,95 @@ app.use(
     })
 );
 
-// B. Security Headers
+// ============================================
+// 4. SECURITY & PARSING MIDDLEWARE
+// ============================================
 app.use(helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" } // Required for frontend image access
+    crossOriginResourcePolicy: { policy: 'cross-origin' }
 }));
 
-// C. Parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
-// D. Logging
+// ============================================
+// 5. LOGGING MIDDLEWARE
+// ============================================
+// Import logger utilities after environment is set up
+import { logger, morganStream } from './utils/logger';
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev', { stream: morganStream }));
 
 // ============================================
-// Routes
+// 6. IMPORT DATABASE & MODELS
 // ============================================
+// IMPORTANT: Import AFTER environment is loaded to prevent crashes
+import { testConnection } from './config/database';
+import './models'; // This initializes all Sequelize models
 
-app.use('/api/v1', routes);
+// ============================================
+// 7. ROUTES
+// ============================================
+import { errorHandler, notFoundHandler } from './middleware/error.middleware';
+import routes from './routes';
 
+// Health check endpoint
 app.get('/', (req, res) => {
-    res.json({ success: true, status: 'Online', message: 'Morphe Labs API' });
+    res.json({
+        success: true,
+        status: 'Online',
+        message: 'Morphe Labs CMS API',
+        environment: process.env.NODE_ENV || 'development',
+        timestamp: new Date().toISOString()
+    });
 });
 
+// API routes
+app.use('/api/v1', routes);
+
 // ============================================
-// Error Handling
+// 8. ERROR HANDLING (MUST BE LAST)
 // ============================================
 app.use(notFoundHandler);
 app.use(errorHandler);
 
 // ============================================
-// Vercel Serverless Initialization
+// 9. SERVER INITIALIZATION
 // ============================================
+// VERCEL: Export app immediately, don't call app.listen()
+// LOCAL: Start server with app.listen()
+
 if (process.env.NODE_ENV !== 'production') {
+    // LOCAL DEVELOPMENT MODE
     const PORT = process.env.PORT || 5000;
-    testConnection().then(() => {
-        app.listen(PORT, () => logger.info(`🚀 Local Server: ${PORT}`));
-    });
-} else {
-    // In Vercel, we don't block the export with 'await'. 
-    // We let the function spin up and log the connection status.
+
     testConnection()
-        .then(() => logger.info('Production DB Connected'))
-        .catch(err => logger.error('Production DB Error:', err));
+        .then(() => {
+            app.listen(PORT, () => {
+                logger.info(`🚀 Server running on port ${PORT}`);
+                logger.info(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
+                logger.info(`🌐 CORS Origin: ${process.env.CORS_ORIGIN}`);
+            });
+        })
+        .catch((error) => {
+            logger.error('❌ Failed to start server:', error);
+            process.exit(1);
+        });
+} else {
+    // PRODUCTION MODE (VERCEL SERVERLESS)
+    // Don't call app.listen() - Vercel handles this
+    // Test connection asynchronously without blocking export
+    testConnection()
+        .then(() => logger.info('✅ Production database connection established'))
+        .catch((error) => {
+            logger.error('❌ Production database connection failed:', error);
+            logger.error('⚠️  Server will continue but database operations may fail');
+        });
+
+    logger.info('🚀 Vercel serverless function initialized');
 }
 
+// ============================================
+// EXPORT FOR VERCEL
+// ============================================
+// This is the entry point for Vercel serverless functions
 export default app;
