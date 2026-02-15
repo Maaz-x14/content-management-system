@@ -12,11 +12,25 @@ class MediaService {
     private uploadDir: string;
 
     constructor() {
-        this.uploadDir = path.join(__dirname, '../../uploads');
+        // In Vercel (serverless), we can only write to /tmp
+        if (process.env.NODE_ENV === 'production') {
+            this.uploadDir = '/tmp/uploads';
+        } else {
+            this.uploadDir = path.join(__dirname, '../../uploads');
+        }
 
         // Ensure upload directory exists
-        if (!fsSync.existsSync(this.uploadDir)) {
-            fsSync.mkdirSync(this.uploadDir, { recursive: true });
+        try {
+            if (!fsSync.existsSync(this.uploadDir)) {
+                fsSync.mkdirSync(this.uploadDir, { recursive: true });
+                logger.info(`📁 Created upload directory: ${this.uploadDir}`);
+            }
+        } catch (error) {
+            logger.error(`❌ Failed to create upload directory: ${this.uploadDir}`, error);
+            // In production, we don't want to crash the whole app if upload folder creation fails
+            if (process.env.NODE_ENV !== 'production') {
+                throw error;
+            }
         }
     }
 
