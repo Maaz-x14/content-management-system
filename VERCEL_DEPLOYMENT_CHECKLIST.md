@@ -30,6 +30,9 @@
 - ✅ **Model Initialization & Associations**: Refactored `models/index.ts` into a master registry and de-coupled model files using `import type`. This definitively fixes `EagerLoadingError: Role is not associated to User!`.
 - ✅ **Read-Only Filesystem**: Fixed `MediaService` to use `/tmp/uploads` instead of `backend/uploads` because the Vercel deployment directory is read-only.
 - ✅ **Logger File Transports**: Disabled Winston file logging in production to avoid write errors.
+- ✅ **Frontend SPA Routing**: Added `vercel.json` with rewrites to prevent 404 errors on page refresh.
+- ✅ **Form State Management**: Fixed `UserFormModal` to reset fields when opened, preventing previous data persistence.
+- ✅ **Media URL Refactor**: Updated Media library to use environment-based URLs instead of hardcoded localhost.
 
 ---
 
