@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { careerService } from '../services/career.service';
-import { Loader2, Mail, Phone, FileText, ExternalLink, MessageSquare, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Loader2, Mail, Phone, FileText, ExternalLink, Clock } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Modal from '../components/Modal';
 import { clsx } from 'clsx';
