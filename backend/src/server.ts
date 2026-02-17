@@ -53,6 +53,11 @@ app.use(
                 return callback(null, true);
             }
 
+            // Allow all Vercel deployment domains
+            if (origin.endsWith('.vercel.app')) {
+                return callback(null, true);
+            }
+
             // Normalize URLs by removing trailing slashes
             const normalizedOrigin = origin.replace(/\/$/, '');
             const isAllowed = allowedOrigins.some(
