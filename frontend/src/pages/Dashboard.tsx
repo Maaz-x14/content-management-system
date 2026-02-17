@@ -4,6 +4,7 @@ import api from '../services/api';
 // import { Link } from 'react-router-dom';
 import { Activity, Briefcase, FileText, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { clsx } from 'clsx';
+import { useAuth } from '../context/AuthContext';
 
 interface DashboardStats {
   overview: {
@@ -27,6 +28,10 @@ interface DashboardStats {
 }
 
 const Dashboard: React.FC = () => {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'super-admin' || user?.role === 'super_admin';
+  const isViewer = user?.role === 'viewer';
+
   // Use React Query with auto-refresh
   const { data, isLoading, isError } = useQuery({
     queryKey: ['dashboardStats'],
@@ -98,31 +103,35 @@ const Dashboard: React.FC = () => {
       
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard 
-          label="Total Users" 
-          value={stats?.overview.totalUsers || 0} 
-          icon={<Activity className="w-5 h-5 text-primary-cyan" />}
-          trend="Total Platform Users"
-        />
+        {isAdmin && (
+          <StatCard 
+            label="Total Users" 
+            value={stats?.overview.totalUsers || 0} 
+            icon={<Activity className="w-5 h-5 text-primary-cyan" />}
+            trend="Total Platform Users"
+          />
+        )}
         <StatCard 
           label="Published Posts" 
           value={stats?.overview.totalPosts || 0} 
           icon={<FileText className="w-5 h-5 text-primary" />}
-          trend={`${stats?.breakdown.posts.draft || 0} drafts pending`}
+          trend={!isViewer ? `${stats?.breakdown.posts.draft || 0} drafts pending` : undefined}
         />
         <StatCard 
           label="Active Jobs" 
           value={stats?.overview.totalJobs || 0} 
           icon={<Briefcase className="w-5 h-5 text-primary-cyan" />}
-          trend={`${stats?.breakdown.jobs.closed || 0} positions closed`}
+          trend={!isViewer ? `${stats?.breakdown.jobs.closed || 0} positions closed` : undefined}
         />
-        <StatCard 
-          label="Applications" 
-          value={stats?.overview.totalApplications || 0} 
-          icon={<CheckCircle className="w-5 h-5 text-success" />} // Using success green for applications
-          trend="Candidates applied"
-          isSuccess
-        />
+        {!isViewer && (
+          <StatCard 
+            label="Applications" 
+            value={stats?.overview.totalApplications || 0} 
+            icon={<CheckCircle className="w-5 h-5 text-success" />} // Using success green for applications
+            trend="Candidates applied"
+            isSuccess
+          />
+        )}
       </div>
 
       {/* Recent Activity Feed */}

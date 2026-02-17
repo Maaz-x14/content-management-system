@@ -7,7 +7,9 @@ export interface BlogPost {
     excerpt: string | null;
     content: string;
     featured_image: string | null;
-    status: 'draft' | 'published' | 'archived';
+    status: 'draft' | 'published' | 'scheduled' | 'archived';
+    published_at: string | null;
+    scheduled_for: string | null;
     author_id: number;
     created_at: string;
     author?: {

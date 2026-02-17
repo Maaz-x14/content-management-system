@@ -37,8 +37,9 @@ export const createJob = async (req: Request, res: Response, _next: NextFunction
     const {
         title,
         department,
-        location,
-        employmentType,
+        location_city,
+        location_type,
+        employment_type,
         description,
         responsibilities,
         qualifications,
@@ -56,8 +57,9 @@ export const createJob = async (req: Request, res: Response, _next: NextFunction
     const job = await jobService.createJob({
         title,
         department,
-        location,
-        employmentType,
+        location_city,
+        location_type,
+        employment_type,
         description,
         responsibilities,
         qualifications,
@@ -82,8 +84,9 @@ export const updateJob = async (req: Request, res: Response, _next: NextFunction
     const {
         title,
         department,
-        location,
-        employmentType,
+        location_city,
+        location_type,
+        employment_type,
         description,
         responsibilities,
         qualifications,
@@ -99,8 +102,9 @@ export const updateJob = async (req: Request, res: Response, _next: NextFunction
     const job = await jobService.updateJob(validateId(id), {
         title,
         department,
-        location,
-        employmentType,
+        location_city,
+        location_type,
+        employment_type,
         description,
         responsibilities,
         qualifications,
@@ -172,4 +176,12 @@ export const updateApplicationStatus = async (req: Request, res: Response, _next
 
     const application = await jobService.updateApplicationStatus(validateId(applicationId), status, notes);
     res.json({ success: true, data: application });
+};
+
+/**
+ * Get ALL applications
+ */
+export const getAllApplications = async (_req: Request, res: Response, _next: NextFunction) => {
+    const applications = await jobService.getAllApplications();
+    res.json({ success: true, data: applications });
 };

@@ -16,6 +16,7 @@ interface CreatePostRequest extends Request {
         metaDescription?: string;
         isFeatured?: boolean;
         publishedAt?: Date;
+        scheduledFor?: Date;
     };
 }
 
@@ -35,6 +36,7 @@ interface UpdatePostRequest extends Request {
         metaDescription?: string;
         isFeatured?: boolean;
         publishedAt?: Date;
+        scheduledFor?: Date;
     };
 }
 
@@ -146,7 +148,12 @@ export const createPost = async (
             metaTitle,
             metaDescription,
             publishedAt,
+            scheduledFor,
         } = req.body;
+
+        if (status === 'scheduled' && !scheduledFor) {
+            throw ApiError.badRequest('Scheduled date is required for scheduled posts');
+        }
 
         if (!req.user) {
             throw ApiError.unauthorized('User not authenticated');
@@ -164,6 +171,7 @@ export const createPost = async (
             metaTitle,
             metaDescription,
             publishedAt,
+            scheduledFor,
         });
 
         res.status(201).json({
@@ -196,7 +204,12 @@ export const updatePost = async (
             metaTitle,
             metaDescription,
             publishedAt,
+            scheduledFor,
         } = req.body;
+
+        if (status === 'scheduled' && !scheduledFor) {
+            throw ApiError.badRequest('Scheduled date is required for scheduled posts');
+        }
 
         const post = await blogService.updatePost(validateId(id, 'Post ID'), {
             title,
@@ -209,6 +222,7 @@ export const updatePost = async (
             metaTitle,
             metaDescription,
             publishedAt,
+            scheduledFor,
         });
 
         res.json({

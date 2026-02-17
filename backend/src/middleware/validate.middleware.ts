@@ -20,7 +20,7 @@ export const validate = (validations: ValidationChain[]) => {
                 message: error.msg,
             }));
 
-            throw ApiError.validationError('Validation failed', formattedErrors);
+            return next(ApiError.validationError('Validation failed', formattedErrors));
         }
 
         next();

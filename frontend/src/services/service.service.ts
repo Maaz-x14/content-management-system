@@ -7,7 +7,8 @@ export interface Service {
     description: string;
     short_description: string | null;
     icon: string | null;
-    is_active: boolean;
+    status: 'completed' | 'ongoing' | 'archived';
+    is_active?: boolean;
     created_at: string;
 }
 

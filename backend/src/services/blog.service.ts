@@ -15,6 +15,7 @@ interface CreatePostData {
     metaTitle?: string;
     metaDescription?: string;
     publishedAt?: Date;
+    scheduledFor?: Date;
 }
 
 interface UpdatePostData {
@@ -28,6 +29,7 @@ interface UpdatePostData {
     metaTitle?: string;
     metaDescription?: string;
     publishedAt?: Date;
+    scheduledFor?: Date;
 }
 
 interface PostFilters {
@@ -163,6 +165,7 @@ export const createPost = async (data: CreatePostData) => {
         meta_title: data.metaTitle,
         meta_description: data.metaDescription,
         published_at: data.publishedAt || (data.status === 'published' ? new Date() : null),
+        scheduled_for: data.scheduledFor || null,
     });
 
     if (data.tags && data.tags.length > 0) {
@@ -208,7 +211,8 @@ export const updatePost = async (id: number, data: UpdatePostData) => {
         meta_title: data.metaTitle !== undefined ? data.metaTitle : post.meta_title,
         meta_description:
             data.metaDescription !== undefined ? data.metaDescription : post.meta_description,
-        published_at: data.publishedAt || post.published_at,
+        published_at: data.publishedAt || (data.status === 'published' && !post.published_at ? new Date() : post.published_at),
+        scheduled_for: data.scheduledFor !== undefined ? data.scheduledFor : post.scheduled_for,
     });
 
     if (data.tags) {

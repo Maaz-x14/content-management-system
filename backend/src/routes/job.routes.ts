@@ -14,22 +14,42 @@ const router = Router();
  *   description: Job listings and applications
  */
 
-/**
- * @swagger
- * /jobs:
- *   get:
- *     summary: Get all job listings
- *     tags: [Careers]
- *     parameters:
- *       - in: query
- *         name: status
- *         schema:
- *           type: string
- *           enum: [draft, published, closed]
- *     responses:
- *       200:
- *         description: List of jobs
- */
+// ============================================
+// 1. SPECIFIC PROTECTED ROUTES (Must be above /:id)
+// ============================================
+
+router.get(
+    '/all/applications',
+    authenticate,
+    authorize('super-admin', 'editor'),
+    jobController.getAllApplications
+);
+
+router.patch(
+    '/applications/:applicationId/status',
+    authenticate,
+    authorize('super-admin', 'editor'),
+    validate([
+        param('applicationId').isInt().withMessage('Application ID must be an integer'),
+        body('status').notEmpty().withMessage('Status is required'),
+    ]),
+    jobController.updateApplicationStatus
+);
+
+// ============================================
+// 2. SPECIFIC PUBLIC ROUTES (Must be above /:id)
+// ============================================
+
+router.get(
+    '/slug/:slug',
+    validate([param('slug').isString().notEmpty().withMessage('Slug is required')]),
+    jobController.getJobBySlug
+);
+
+// ============================================
+// 3. GENERIC PUBLIC ROUTES
+// ============================================
+
 router.get(
     '/',
     validate([
@@ -38,89 +58,12 @@ router.get(
     jobController.getAllJobs
 );
 
-/**
- * @swagger
- * /jobs/{id}:
- *   get:
- *     summary: Get job by ID
- *     tags: [Careers]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Job details
- *       404:
- *         description: Job not found
- */
 router.get(
     '/:id',
     validate([param('id').isInt().withMessage('ID must be an integer')]),
     jobController.getJobById
 );
 
-/**
- * @swagger
- * /jobs/slug/{slug}:
- *   get:
- *     summary: Get job by slug
- *     tags: [Careers]
- *     parameters:
- *       - in: path
- *         name: slug
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Job details
- *       404:
- *         description: Job not found
- */
-router.get(
-    '/slug/:slug',
-    validate([param('slug').isString().notEmpty().withMessage('Slug is required')]),
-    jobController.getJobBySlug
-);
-
-/**
- * @swagger
- * /jobs/{id}/apply:
- *   post:
- *     summary: Submit job application
- *     tags: [Careers]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - applicantName
- *               - applicantEmail
- *               - resumeUrl
- *             properties:
- *               applicantName:
- *                 type: string
- *               applicantEmail:
- *                 type: string
- *               resumeUrl:
- *                 type: string
- *     responses:
- *       201:
- *         description: Application submitted
- *       400:
- *         description: Invalid input
- */
 router.post(
     '/:id/apply',
     validate([
@@ -132,47 +75,26 @@ router.post(
     jobController.submitApplication
 );
 
-// Protected routes
+// ============================================
+// 4. PROTECTED ADMIN ROUTES (Job Management)
+// ============================================
 router.use(authenticate);
 
-/**
- * @swagger
- * /jobs:
- *   post:
- *     summary: Create a new job listing
- *     tags: [Careers]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - title
- *               - department
- *               - location
- *             properties:
- *               title:
- *                 type: string
- *               department:
- *                 type: string
- *               location:
- *                 type: string
- *     responses:
- *       201:
- *         description: Job created
- *       401:
- *         description: Unauthorized
- */
 router.post(
     '/',
     authorize('super-admin', 'editor'),
     validate([
         body('title').trim().notEmpty().withMessage('Title is required'),
         body('department').notEmpty().withMessage('Department is required'),
-        body('location').notEmpty().withMessage('Location is required'),
+        body('location_city').optional().trim(),
+        body('location_type')
+            .notEmpty()
+            .isIn(['onsite', 'remote', 'hybrid'])
+            .withMessage('Invalid location type'),
+        body('employment_type')
+            .notEmpty()
+            .isIn(['full-time', 'part-time', 'contract', 'internship'])
+            .withMessage('Invalid employment type'),
         body('status')
             .optional()
             .isIn(['draft', 'published', 'closed'])
@@ -181,37 +103,6 @@ router.post(
     jobController.createJob
 );
 
-/**
- * @swagger
- * /jobs/{id}:
- *   put:
- *     summary: Update a job listing
- *     tags: [Careers]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               title:
- *                 type: string
- *               department:
- *                 type: string
- *     responses:
- *       200:
- *         description: Job updated
- *       404:
- *         description: Job not found
- */
 router.put(
     '/:id',
     authorize('super-admin', 'editor'),
@@ -222,56 +113,18 @@ router.put(
     jobController.updateJob
 );
 
-/**
- * @swagger
- * /jobs/{id}:
- *   delete:
- *     summary: Delete a job listing
- *     tags: [Careers]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Job deleted
- *       404:
- *         description: Job not found
- */
-router.delete(
-    '/:id',
-    authorize('super-admin', 'editor'),
-    validate([param('id').isInt().withMessage('ID must be an integer')]),
-    jobController.deleteJob
-);
-
-/**
- * @swagger
- * /jobs/{id}/applications:
- *   get:
- *     summary: Get applications for a job
- *     tags: [Careers]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: List of applications
- */
 router.get(
     '/:id/applications',
     authorize('super-admin', 'editor'),
     validate([param('id').isInt().withMessage('ID must be an integer')]),
     jobController.getJobApplications
+);
+
+router.delete(
+    '/:id',
+    authorize('super-admin', 'editor'),
+    validate([param('id').isInt().withMessage('ID must be an integer')]),
+    jobController.deleteJob
 );
 
 export default router;

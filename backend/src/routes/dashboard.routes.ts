@@ -40,8 +40,14 @@ router.use(authenticate);
  */
 router.get(
     '/stats',
-    authorize('super-admin', 'editor', 'author'),
+    authorize('super_admin', 'super-admin', 'editor', 'author', 'viewer'),
     dashboardController.getDashboardStats
+);
+
+router.get(
+    '/search',
+    authorize('super_admin', 'super-admin', 'editor', 'author'),
+    dashboardController.search
 );
 
 export default router;

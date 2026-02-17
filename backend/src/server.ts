@@ -41,10 +41,15 @@ app.use(
                 process.env.CORS_ORIGIN,
                 'https://content-management-system-udo3.vercel.app',
                 'http://localhost:5173',
-            ].filter(Boolean); // Remove undefined values
+            ].filter(Boolean);
 
             // Allow requests with no origin (mobile apps, Postman, curl)
             if (!origin) {
+                return callback(null, true);
+            }
+
+            // Always allow localhost in development
+            if (origin.startsWith('http://localhost:')) {
                 return callback(null, true);
             }
 
@@ -78,6 +83,10 @@ app.use(helmet({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
+
+// Serve static files from the uploads directory
+import path from 'path';
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // ============================================
 // 5. LOGGING MIDDLEWARE

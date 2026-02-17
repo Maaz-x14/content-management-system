@@ -5,8 +5,8 @@ import type { ServiceImage } from './ServiceImage.model';
 
 // Service status enum
 export enum ServiceStatus {
-    DRAFT = 'draft',
-    PUBLISHED = 'published',
+    COMPLETED = 'completed',
+    ONGOING = 'ongoing',
     ARCHIVED = 'archived',
 }
 
@@ -134,7 +134,7 @@ Service.init(
         status: {
             type: DataTypes.ENUM(...Object.values(ServiceStatus)),
             allowNull: false,
-            defaultValue: ServiceStatus.DRAFT,
+            defaultValue: ServiceStatus.ONGOING,
         },
         featured: {
             type: DataTypes.BOOLEAN,

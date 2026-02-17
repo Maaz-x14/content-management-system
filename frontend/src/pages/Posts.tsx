@@ -11,7 +11,9 @@ import api from '../services/api';
 interface PostFormData {
     title: string;
     content: string;
-    status: 'draft' | 'published';
+    status: 'draft' | 'published' | 'scheduled' | 'archived';
+    publishedAt?: string;
+    scheduledFor?: string;
 }
 
 const Posts: React.FC = () => {
@@ -20,18 +22,27 @@ const Posts: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editPost, setEditPost] = useState<BlogPost | null>(null);
 
-    const { register, handleSubmit, reset, setValue } = useForm<PostFormData>();
+    const { register, handleSubmit, reset, setValue, watch } = useForm<PostFormData>();
+    const status = watch('status');
 
     const { data, isLoading } = useQuery({
         queryKey: ['posts', page],
         queryFn: () => postService.getAll({ page, limit: 10 }),
     });
 
+
+
     useEffect(() => {
         if (editPost) {
             setValue('title', editPost.title);
             setValue('content', editPost.content);
-            setValue('status', editPost.status as 'draft' | 'published');
+            setValue('status', editPost.status);
+            if (editPost.published_at) {
+                setValue('publishedAt', new Date(editPost.published_at).toISOString().slice(0, 16));
+            }
+            if (editPost.scheduled_for) {
+                setValue('scheduledFor', new Date(editPost.scheduled_for).toISOString().slice(0, 16));
+            }
         } else {
             reset({ title: '', content: '', status: 'draft' });
         }
@@ -124,14 +135,17 @@ const Posts: React.FC = () => {
                                     <td className="px-6 py-4">
                                         <span className={`px-2 py-1 rounded-full text-xs ${
                                             post.status === 'published' ? 'bg-green-900/30 text-green-400' : 
+                                            post.status === 'scheduled' ? 'bg-blue-900/30 text-blue-400' :
                                             post.status === 'draft' ? 'bg-yellow-900/30 text-yellow-400' : 'bg-gray-700 text-gray-400'
                                         }`}>
-                                            {post.status}
+                                            {post.status.charAt(0).toUpperCase() + post.status.slice(1)}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-gray-300">{post.author?.full_name || 'Unknown'}</td>
                                     <td className="px-6 py-4 text-gray-400 text-sm">
-                                        {new Date(post.created_at).toLocaleDateString()}
+                                        {post.status === 'published' && post.published_at ? `Published: ${new Date(post.published_at).toLocaleDateString()}` :
+                                         post.status === 'scheduled' && post.scheduled_for ? `Scheduled: ${new Date(post.scheduled_for).toLocaleDateString()}` :
+                                         `Created: ${new Date(post.created_at).toLocaleDateString()}`}
                                     </td>
                                     <td className="px-6 py-4 flex gap-3">
                                         <button onClick={() => handleEdit(post)} className="text-indigo-400 hover:text-indigo-300"><Edit2 className="w-4 h-4" /></button>
@@ -173,8 +187,32 @@ const Posts: React.FC = () => {
                         >
                             <option value="draft">Draft</option>
                             <option value="published">Published</option>
+                            <option value="scheduled">Scheduled</option>
+                            <option value="archived">Archived</option>
                         </select>
                     </div>
+
+                    {status === 'published' && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-400">Published At</label>
+                            <input
+                                type="datetime-local"
+                                {...register('publishedAt')}
+                                className="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            />
+                        </div>
+                    )}
+
+                    {status === 'scheduled' && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-400">Schedule For</label>
+                            <input
+                                type="datetime-local"
+                                {...register('scheduledFor')}
+                                className="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            />
+                        </div>
+                    )}
                     <div className="flex justify-end gap-3 pt-4">
                         <button
                             type="button"

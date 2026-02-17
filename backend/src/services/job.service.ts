@@ -6,8 +6,9 @@ import { Op } from 'sequelize';
 interface JobListingData {
     title: string;
     department: string;
-    location: string;
-    employmentType: string;
+    location_city?: string;
+    location_type: string;
+    employment_type: string;
     description: string;
     responsibilities?: string[];
     qualifications?: string[];
@@ -24,8 +25,9 @@ interface JobListingData {
 interface UpdateJobData {
     title?: string;
     department?: string;
-    location?: string;
-    employmentType?: string;
+    location_city?: string;
+    location_type?: string;
+    employment_type?: string;
     description?: string;
     responsibilities?: string[];
     qualifications?: string[];
@@ -89,10 +91,15 @@ export const createJob = async (data: JobListingData) => {
     const existingJob = await JobListing.findOne({ where: { slug } });
     if (existingJob) throw ApiError.conflict('A job with this title already exists');
 
-    // Map string to enum
+    // Map string to enums
     let empType: EmploymentType = EmploymentType.FULL_TIME;
-    if (Object.values(EmploymentType).includes(data.employmentType as EmploymentType)) {
-        empType = data.employmentType as EmploymentType;
+    if (Object.values(EmploymentType).includes(data.employment_type as EmploymentType)) {
+        empType = data.employment_type as EmploymentType;
+    }
+
+    let locType: LocationType = LocationType.ONSITE;
+    if (Object.values(LocationType).includes(data.location_type as LocationType)) {
+        locType = data.location_type as LocationType;
     }
 
     let jobStatus: JobStatus = JobStatus.DRAFT;
@@ -104,8 +111,8 @@ export const createJob = async (data: JobListingData) => {
         title: data.title,
         slug,
         department: data.department,
-        location_type: LocationType.ONSITE,
-        location_city: data.location,
+        location_type: locType,
+        location_city: data.location_city || null,
         employment_type: empType,
         description: data.description,
         responsibilities: data.responsibilities || [],
@@ -141,8 +148,13 @@ export const updateJob = async (id: number, data: UpdateJobData) => {
 
     // Handle enums
     let empType = job.employment_type;
-    if (data.employmentType && Object.values(EmploymentType).includes(data.employmentType as EmploymentType)) {
-        empType = data.employmentType as EmploymentType;
+    if (data.employment_type && Object.values(EmploymentType).includes(data.employment_type as EmploymentType)) {
+        empType = data.employment_type as EmploymentType;
+    }
+
+    let locType = job.location_type;
+    if (data.location_type && Object.values(LocationType).includes(data.location_type as LocationType)) {
+        locType = data.location_type as LocationType;
     }
 
     let jobStatus = job.status;
@@ -154,7 +166,8 @@ export const updateJob = async (id: number, data: UpdateJobData) => {
         title: data.title || job.title,
         slug,
         department: data.department || job.department,
-        location_city: data.location !== undefined ? data.location : job.location_city,
+        location_city: data.location_city !== undefined ? data.location_city : job.location_city,
+        location_type: locType,
         employment_type: empType,
         description: data.description || job.description,
         responsibilities: data.responsibilities || job.responsibilities,
@@ -224,7 +237,7 @@ export const getJobApplications = async (jobId: number) => {
 
     return JobApplication.findAll({
         where: { job_id: jobId },
-        order: [['created_at', 'DESC']],
+        order: [['applied_at', 'DESC']],
     });
 };
 
@@ -246,4 +259,18 @@ export const updateApplicationStatus = async (id: number, status: string, notes?
     });
 
     return application;
+};
+
+/**
+ * Get ALL applications (for admin overview)
+ */
+export const getAllApplications = async () => {
+    return JobApplication.findAll({
+        include: [{
+            model: JobListing,
+            as: 'job',
+            attributes: ['id', 'title', 'department']
+        }],
+        order: [['applied_at', 'DESC']],
+    });
 };

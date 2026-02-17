@@ -7,7 +7,8 @@ import {
   Image, 
   LayoutDashboard, 
   Settings, 
-  X
+  X,
+  ClipboardList
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuth } from '../context/AuthContext';
@@ -15,11 +16,14 @@ import { useAuth } from '../context/AuthContext';
 const Sidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
   const { user } = useAuth();
   
+  const isViewer = user?.role === 'viewer';
+  
   const links = [
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/posts', label: 'Blog Posts', icon: FileText },
-    { to: '/services', label: 'Services', icon: Settings }, // Using Settings icon for now as placeholder
+    { to: '/services', label: 'Services', icon: Settings }, 
     { to: '/careers', label: 'Careers', icon: Briefcase },
+    ...(!isViewer ? [{ to: '/applications', label: 'Applications', icon: ClipboardList }] : []),
     { to: '/media', label: 'Media Library', icon: Image },
   ];
 

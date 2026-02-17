@@ -5,6 +5,7 @@ import type { MediaFile } from '../services/media.service';
 import { Upload, Trash2, File, Film, FileText, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { clsx } from 'clsx';
+import Modal from '../components/Modal';
 // import { useAuth } from '../context/AuthContext';
 
 const Media: React.FC = () => {
@@ -12,6 +13,7 @@ const Media: React.FC = () => {
     const queryClient = useQueryClient();
     const [page, setPage] = useState(1);
     const [uploading, setUploading] = useState(false);
+    const [selectedFile, setSelectedFile] = useState<MediaFile | null>(null);
 
     const { data, isLoading } = useQuery({
         queryKey: ['media', page],
@@ -54,6 +56,11 @@ const Media: React.FC = () => {
         if (window.confirm('Are you sure you want to delete this file?')) {
             deleteMutation.mutate(id);
         }
+    };
+
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        toast.success('URL copied to clipboard');
     };
 
     const getIcon = (type: string) => {
@@ -136,15 +143,20 @@ const Media: React.FC = () => {
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </button>
-                                        <a 
-                                            href={`${API_URL}${file.file_url}`} 
-                                            target="_blank" 
-                                            rel="noopener noreferrer"
+                                        <button 
+                                            onClick={() => copyToClipboard(`${API_URL}${file.file_url}`)}
+                                            className="p-2 bg-indigo-600 rounded-full text-white hover:bg-indigo-700 transition-colors"
+                                            title="Copy Link"
+                                        >
+                                            <Upload className="w-4 h-4 rotate-180" />
+                                        </button>
+                                        <button 
+                                            onClick={() => setSelectedFile(file)}
                                             className="p-2 bg-gray-600 rounded-full text-white hover:bg-gray-700 transition-colors"
-                                            title="View"
+                                            title="Preview"
                                         >
                                            <Icon className="w-4 h-4" />
-                                        </a>
+                                        </button>
                                     </div>
                                 </div>
                             );
@@ -175,6 +187,78 @@ const Media: React.FC = () => {
                     )}
                 </>
             )}
+
+            {/* Preview Modal */}
+            <Modal
+                isOpen={!!selectedFile}
+                onClose={() => setSelectedFile(null)}
+                title={selectedFile?.original_name || 'File Preview'}
+            >
+                <div className="space-y-4">
+                    <div className="w-full bg-gray-900 rounded-lg overflow-hidden flex items-center justify-center min-h-[300px]">
+                        {selectedFile?.file_type === 'image' ? (
+                            <img
+                                src={`${API_URL}${selectedFile.file_url}`}
+                                alt={selectedFile.alt_text || 'Preview'}
+                                className="max-w-full max-h-[70vh] object-contain"
+                            />
+                        ) : (
+                            <div className="flex flex-col items-center">
+                                {selectedFile && React.createElement(getIcon(selectedFile.file_type), { className: "w-20 h-20 text-gray-500 mb-4" })}
+                                <p className="text-gray-400">Preview not available for this file type</p>
+                            </div>
+                        )}
+                    </div>
+                    <div className="bg-gray-900/50 p-4 rounded-lg space-y-2">
+                        <div className="flex justify-between text-sm">
+                            <span className="text-gray-400">File Type:</span>
+                            <span className="text-white uppercase">{selectedFile?.file_type}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-gray-400">Size:</span>
+                            <span className="text-white">{(selectedFile?.file_size || 0) / 1024 > 1024 ? `${((selectedFile?.file_size || 0) / (1024 * 1024)).toFixed(2)} MB` : `${((selectedFile?.file_size || 0) / 1024).toFixed(1)} KB`}</span>
+                        </div>
+                        {selectedFile?.image_width && (
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-400">Dimensions:</span>
+                                <span className="text-white">{selectedFile.image_width} x {selectedFile.image_height}</span>
+                            </div>
+                        )}
+                        <div className="pt-2">
+                             <label className="block text-xs font-medium text-gray-500 mb-1">File URL</label>
+                             <div className="flex gap-2">
+                                 <input 
+                                    readOnly 
+                                    value={`${API_URL}${selectedFile?.file_url}`}
+                                    className="flex-1 bg-gray-800 border-gray-700 rounded text-xs text-gray-300 px-2 py-1"
+                                 />
+                                 <button 
+                                    onClick={() => copyToClipboard(`${API_URL}${selectedFile?.file_url}`)}
+                                    className="px-3 py-1 bg-indigo-600 text-white rounded text-xs hover:bg-indigo-700"
+                                 >
+                                    Copy
+                                 </button>
+                             </div>
+                        </div>
+                    </div>
+                    <div className="flex justify-between">
+                        <a 
+                            href={`${API_URL}${selectedFile?.file_url}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-indigo-400 hover:text-indigo-300 text-sm flex items-center"
+                        >
+                            Open in new tab
+                        </a>
+                        <button
+                            onClick={() => setSelectedFile(null)}
+                            className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 text-sm"
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 };

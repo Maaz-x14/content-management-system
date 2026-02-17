@@ -11,6 +11,7 @@ import Users from './pages/Users';
 import Posts from './pages/Posts';
 import Services from './pages/Services';
 import Careers from './pages/Careers';
+import Applications from './pages/Applications';
 import Settings from './pages/Settings';
 
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -35,6 +36,7 @@ function App() {
               <Route path="/posts" element={<Posts />} />
               <Route path="/services" element={<Services />} />
               <Route path="/careers" element={<Careers />} />
+              <Route path="/applications" element={<Applications />} />
               <Route path="/settings" element={<Settings />} />
             </Route>
           </Route>

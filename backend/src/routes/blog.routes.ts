@@ -79,33 +79,15 @@ router.get(
  *         description: Post not found
  */
 router.get(
-    '/:id',
-    validate([param('id').isInt().withMessage('ID must be an integer')]),
-    blogController.getPostById
-);
-
-/**
- * @swagger
- * /posts/slug/{slug}:
- *   get:
- *     summary: Get post by slug
- *     tags: [Blog]
- *     parameters:
- *       - in: path
- *         name: slug
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Post details
- *       404:
- *         description: Post not found
- */
-router.get(
     '/slug/:slug',
     validate([param('slug').isString().notEmpty().withMessage('Slug is required')]),
     blogController.getPostBySlug
+);
+
+router.get(
+    '/:id',
+    validate([param('id').isInt().withMessage('ID must be an integer')]),
+    blogController.getPostById
 );
 
 // Protected routes

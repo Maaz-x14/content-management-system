@@ -8,7 +8,7 @@ interface ServiceData {
     description: string;
     clientName?: string;
     projectUrl?: string;
-    status: 'draft' | 'published';
+    status: 'completed' | 'ongoing' | 'archived';
     isFeatured?: boolean;
     category?: string;
     technologies?: string[];
@@ -32,7 +32,7 @@ interface UpdateServiceData {
     description?: string;
     clientName?: string;
     projectUrl?: string;
-    status?: 'draft' | 'published';
+    status?: 'completed' | 'ongoing' | 'archived';
     isFeatured?: boolean;
     category?: string;
     technologies?: string[];

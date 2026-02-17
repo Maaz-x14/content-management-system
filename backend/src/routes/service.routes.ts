@@ -62,33 +62,15 @@ router.get(
  *         description: Service not found
  */
 router.get(
-    '/:id',
-    validate([param('id').isInt().withMessage('ID must be an integer')]),
-    serviceController.getServiceById
-);
-
-/**
- * @swagger
- * /services/slug/{slug}:
- *   get:
- *     summary: Get service by slug
- *     tags: [Services]
- *     parameters:
- *       - in: path
- *         name: slug
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Service details
- *       404:
- *         description: Service not found
- */
-router.get(
     '/slug/:slug',
     validate([param('slug').isString().notEmpty().withMessage('Slug is required')]),
     serviceController.getServiceBySlug
+);
+
+router.get(
+    '/:id',
+    validate([param('id').isInt().withMessage('ID must be an integer')]),
+    serviceController.getServiceById
 );
 
 // Protected routes

@@ -11,7 +11,7 @@ import { useForm } from 'react-hook-form';
 interface ServiceFormData {
     title: string;
     description: string;
-    is_active: boolean;
+    status: 'completed' | 'ongoing' | 'archived';
 }
 
 const Services: React.FC = () => {
@@ -31,9 +31,9 @@ const Services: React.FC = () => {
         if (editService) {
             setValue('title', editService.title);
             setValue('description', editService.description);
-            setValue('is_active', editService.is_active);
+            setValue('status', editService.status);
         } else {
-            reset({ title: '', description: '', is_active: true });
+            reset({ title: '', description: '', status: 'ongoing' });
         }
     }, [editService, isModalOpen, reset, setValue]);
 
@@ -114,8 +114,12 @@ const Services: React.FC = () => {
                                     <td className="px-6 py-4 text-white font-medium">{service.title}</td>
                                     <td className="px-6 py-4 text-gray-400 text-sm truncate max-w-xs">{service.short_description || service.description}</td>
                                     <td className="px-6 py-4">
-                                        <span className={`px-2 py-1 rounded-full text-xs ${service.is_active ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}>
-                                            {service.is_active ? 'Active' : 'Inactive'}
+                                        <span className={`px-2 py-1 rounded-full text-xs ${
+                                            service.status === 'completed' ? 'bg-green-900/30 text-green-400' : 
+                                            service.status === 'ongoing' ? 'bg-blue-900/30 text-blue-400' : 
+                                            'bg-gray-700 text-gray-400'
+                                        }`}>
+                                            {service.status.charAt(0).toUpperCase() + service.status.slice(1)}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 flex gap-3">
@@ -150,13 +154,16 @@ const Services: React.FC = () => {
                             className="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                         />
                     </div>
-                    <div className="flex items-center">
-                        <input
-                            type="checkbox"
-                            {...register('is_active')}
-                            className="h-4 w-4 rounded border-gray-600 bg-gray-700 text-indigo-600 focus:ring-indigo-500"
-                        />
-                        <label className="ml-2 block text-sm text-gray-400">Active</label>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-400">Status</label>
+                        <select
+                            {...register('status')}
+                            className="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        >
+                            <option value="completed">Completed</option>
+                            <option value="ongoing">Ongoing</option>
+                            <option value="archived">Archived</option>
+                        </select>
                     </div>
                     <div className="flex justify-end gap-3 pt-4">
                         <button
