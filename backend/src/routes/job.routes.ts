@@ -53,7 +53,7 @@ router.get(
 router.get(
     '/',
     validate([
-        query('status').optional().isIn(['draft', 'published', 'closed']),
+        query('status').optional().isIn(['draft', 'active', 'closed']),
     ]),
     jobController.getAllJobs
 );
@@ -97,7 +97,7 @@ router.post(
             .withMessage('Invalid employment type'),
         body('status')
             .optional()
-            .isIn(['draft', 'published', 'closed'])
+            .isIn(['draft', 'active', 'closed'])
             .withMessage('Invalid status'),
     ]),
     jobController.createJob
